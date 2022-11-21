@@ -20,7 +20,6 @@ library(tidyr)
 library(car)
 library(emmeans)
 library(performance)
-library(jtools)
 
 # Set working directory - WERG drive
 setwd("~/uomShare/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
@@ -41,7 +40,11 @@ soildata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "
 # bring in site type into beltdata dataframe
 beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
 
-#BRING IN TRANSECT LENGTH DATA 
+# bring in site pair into beltdata dataframe
+beltdata$pair <- sitedata$'Paired site code'[match(beltdata$'Site Name', sitedata$'Site Name')]
+
+
+# BRING IN TRANSECT LENGTH DATA ??? 
 
 #### Calculate the number native tree and shrub species per site
 beltdata <- beltdata %>%
@@ -74,13 +77,14 @@ describe(beltdata)
 
 # summarise
 beltdatasummary <- beltdata %>%
-  group_by(sitetype, site, origin) %>%
+  group_by(sitetype, pair, site, origin) %>%
   summarise(
     richness = n_distinct(species),
     nostems = sum(counts),
     norecruits = sum(recruits))
 
-beltsummarycomplete<-tidyr::complete(beltdatasummary,site, origin, fill=list (richness=0, nostems=0, norecruits=0))
+beltsummarycomplete <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
+
 
 # filter to consider only native
 beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
@@ -97,15 +101,13 @@ nativetreerichness <- ggplot(
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
   theme(axis.ticks.x = element_blank())
-
-
 nativetreerichness
 
 #ggsave(nativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
 # model it
-nativerichnessbysitetypemodel <- glm(richness ~ sitetype, data = beltdatasummarynative, family = poisson(link = "log"))
+nativerichnessbysitetypemodel <- glmmTMB(richness ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
 summary(nativerichnessbysitetypemodel)
 r2(nativerichnessbysitetypemodel)
 
@@ -127,21 +129,54 @@ nativetreeabundance <- ggplot(
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
   theme(axis.ticks.x = element_blank())
+nativetreeabundance
+
+# but need to consider TRANSECT length!!!
+
+# rename belt transect length
+sitedata2 <- sitedata %>%
+  rename(beltlength = 'Plot Length (m)',
+         site = 'Site Name') 
+
+# calculate average transect length by site
+beltlengthdata <- sitedata2 %>%
+  group_by(site) %>%
+  summarise(
+    nbelts = n(),
+    sumbeltlength = sum(beltlength),
+    totalbeltarea = sumbeltlength*nbelts)
 
 
+# incorporate belt area into count data
+beltdatasummarynative$totalbeltarea <- beltlengthdata$totalbeltarea[match(beltdatasummarynative$site, beltlengthdata$site)]
+beltdatasummarynative$stemsperha <- round(beltdatasummarynative$nostems/beltdatasummarynative$totalbeltarea*10000)
+
+# plot with new data
+nativetreeabundance <- ggplot(
+  data = beltdatasummarynative, aes(x=reorder(site,-stemsperha), y=stemsperha, fill = sitetype)) +
+  geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
+  labs(x = 'Site', y = "Native tree and shrub density") +
+  scale_fill_brewer(palette="Dark2")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
 nativetreeabundance
 
 
-# ggsave(nativetreeabundance, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativetreeabundances.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-# model it
+# model it - old analyses
 nativeabundancebysitetypemodel <- glm(nostems ~ sitetype, data = beltdatasummarynative, family = poisson(link = "log"))
 summary(nativeabundancebysitetypemodel)
 r2(nativeabundancebysitetypemodel)
 
 
+# model it - new analyses (considers total surveyed area)
+nativeabundanceperhabysitetypemodel <- glmmTMB(stemsperha ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
+summary(nativeabundanceperhabysitetypemodel)
+r2(nativeabundanceperhabysitetypemodel)
 
+#### IVE UPDATED THE CODE UP TO HERE #####
 
 #### Q1/2b. 1m QUADRAT - Native Ground Cover species & other ground cover ----
 
@@ -755,6 +790,9 @@ describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
 
 #### Q1/3a. EXOTIC TREE AND SHRUB Richness----
 
+beltdatasummary <- beltdatasummary[complete.cases(beltdatasummary),]
+beltdatasummary <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
+
 
 # filter to only consider exotic
 beltdatasummaryexotic <- filter(beltdatasummary, origin == "Exotic")
@@ -813,6 +851,7 @@ exoticabundancebysitetypemodel <- glm(nostems ~ sitetype, data = beltdatasummary
 
 summary(exoticabundancebysitetypemodel)
 r2(exoticabundancebysitetypemodel)
+
 
 #### Q3. LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE ---
 
@@ -1435,7 +1474,3 @@ covervssoilworks$exoticbeta <- covervssoilworks$exotic/100
 phosphorusvsecoticcoverglm <- glm(exoticbeta ~ totalphosporus, data = covervssoilworks,   family = beta_family())
 summary(phosphorusvsecoticcoverglm)
 r2(phosphorusvsecoticcoverglm)
-
-
-
-
