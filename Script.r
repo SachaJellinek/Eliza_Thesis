@@ -62,6 +62,7 @@ beltdata$site <- as.factor(beltdata$site)
 beltdata$species <- as.factor(beltdata$species)
 beltdata$origin <- as.factor(beltdata$origin)
 beltdata$sitetype <- as.factor(beltdata$sitetype)
+beltdata$pair <- as.factor(beltdata$pair)
 
 
 # identify variables
@@ -115,8 +116,6 @@ describe(beltdata)
 
 
 
-
-
 #### Q1/2a. NATIVE TREE AND SHRUB ABUNDANCE ----
 
 nativetreeabundance <- ggplot(
@@ -155,7 +154,7 @@ beltdatasummarynative$stemsperha <- round(beltdatasummarynative$nostems/beltdata
 nativetreeabundance <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site,-stemsperha), y=stemsperha, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Native tree and shrub density") +
+  labs(x = 'Site', y = "Native tree and shrub density (stems/ha") +
   scale_fill_brewer(palette="Dark2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
@@ -178,12 +177,14 @@ r2(nativeabundanceperhabysitetypemodel)
 
 #### IVE UPDATED THE CODE UP TO HERE #####
 
+
+
 #### Q1/2b. 1m QUADRAT - Native Ground Cover species & other ground cover ----
-
-
 # bring in site type into quadratdata dataframe
-
 quadratdata$sitetype <- sitedata$'Site type'[match(quadratdata$'Site Name', sitedata$'Site Name')]
+
+# bring in site pair into beltdata dataframe
+quadratdata$pair <- sitedata$'Paired site code'[match(quadratdata$'Site Name', sitedata$'Site Name')]
 
 describe(quadratdata)
 
@@ -225,7 +226,7 @@ quadratdata$water <-as.numeric(quadratdata$water)
 
 # summarise
 quadratdatasummary <- quadratdata %>%
-  group_by(site, sitetype) %>%
+  group_by(sitetype, pair, site) %>%
   summarise(
     exotic = mean(exotic, na.rm = TRUE), 
     native = mean(native, na.rm = TRUE),
@@ -242,7 +243,7 @@ quadratdatasummaryremnant <- filter(quadratdatasummary, sitetype == "Remnant")
 quadratdatasummaryworks <- filter(quadratdatasummary, sitetype == "Works")
 
 
-describe(quadratdatasummarynative)
+describe(quadratdatasummaryremnant)
 describe(quadratdatasummaryworks)
 
 # graph native ground cover percentages
@@ -266,9 +267,9 @@ nativegroundcoverpercentage
 
 # model native ground cover using glmm
 quadratdata$nativebeta <- (quadratdata$native+1)/102
-nativegroundcoverbysitetypeglmm <- glmmTMB(nativebeta ~ sitetype+(1|site), data = quadratdata, family=beta_family(link="logit"))
+nativegroundcoverbysitetypeglmm <- glmmTMB(nativebeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
 summary(nativegroundcoverbysitetypeglmm)
-summ(nativegroundcoverbysitetypeglmm)
+r2(nativegroundcoverbysitetypeglmm)
 
 
 
@@ -293,7 +294,7 @@ exoticgroundcoverpercentage
 
 # model exotic ground cover using glmm
 quadratdata$exoticbeta <- (quadratdata$exotic+1)/102
-exoticgroundcoverbysitetypeglmm <- glmmTMB(exoticbeta ~ sitetype+(1|site), data = quadratdata, family=beta_family(link="logit"))
+exoticgroundcoverbysitetypeglmm <- glmmTMB(exoticbeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
 summary(exoticgroundcoverbysitetypeglmm)
 r2(exoticgroundcoverbysitetypeglmm)
 
@@ -315,7 +316,7 @@ finewdgroundcoverpercentage
 
 # model finewd ground cover using glmm
 quadratdata$finewdbeta <- (quadratdata$finewd+1)/102
-finewdgroundcoverbysitetypeglmm <- glmmTMB(finewdbeta ~ sitetype+(1|site), data = quadratdata, family=beta_family(link="logit"))
+finewdgroundcoverbysitetypeglmm <- glmmTMB(finewdbeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
 summary(finewdgroundcoverbysitetypeglmm)
 
 
@@ -333,11 +334,11 @@ coarsewdgroundcoverpercentage <- ggplot(
 
 coarsewdgroundcoverpercentage
 
-ggsave(coarsewdgroundcoverpercentage, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/coarsewdgroundcoverpercentage.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(coarsewdgroundcoverpercentage, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/coarsewdgroundcoverpercentage.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 # model coarsewd ground cover using glmm 
 quadratdata$coarsewdbeta <- (quadratdata$coarsewd+1)/102
-coarsewdgroundcoverbysitetypeglmm <- glmmTMB(coarsewdbeta ~ sitetype + (1|site), data = quadratdata, family=beta_family(link="logit"))
+coarsewdgroundcoverbysitetypeglmm <- glmmTMB(coarsewdbeta ~ sitetype + (1|pair/site), data = quadratdata, family=beta_family(link="logit"))
 summary(coarsewdgroundcoverbysitetypeglmm)
 
 
@@ -354,16 +355,13 @@ baregroundgroundcoverpercentage <- ggplot(
   theme(axis.ticks.x = element_blank())
 baregroundgroundcoverpercentage
 
-ggsave(baregroundgroundcoverpercentage, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/baregroundgroundcoverpercentage.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(baregroundgroundcoverpercentage, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/baregroundgroundcoverpercentage.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
 # model  bareground ground cover using glmm 
 quadratdata$baregroundbeta <- (quadratdata$ bareground+1)/102
-baregroundgroundcoverbysitetypeglmm <- glmmTMB(baregroundbeta ~ sitetype+(1|site), data = quadratdata, family=beta_family(link="logit"))
+baregroundgroundcoverbysitetypeglmm <- glmmTMB(baregroundbeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
 summary(baregroundgroundcoverbysitetypeglmm)
-
-
-
 
 
 
@@ -401,7 +399,7 @@ covertypecomparisonfigure <- ggplot(
 
 covertypecomparisonfigure
 
-#ggsave(covertypecomparisonfigure, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/covertypecomparisonfigure.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(covertypecomparisonfigure, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/covertypecomparisonfigure.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
 
@@ -409,11 +407,12 @@ covertypecomparisonfigure
 #### Q1/2c STRATA HEIGHTS - CANOPY COVER VEGETATION HEIGHT DIVERSITY ----
 
 #  CANOPY COVER 
-
-
 # lets look at the canopy first
-# bring in site type into beltdata dataframe
+# bring in site type into canopydata dataframe
 canopydata$sitetype <- sitedata$'Site type'[match(canopydata$'Site Code', sitedata$'Site code')]
+
+# bring in site pair into beltdata dataframe
+canopydata$pair <- sitedata$'Paired site code'[match(canopydata$'Site Name', sitedata$'Site Name')]
 
 # rename 'messy' factor names
 canopydata <- canopydata %>%
@@ -425,6 +424,7 @@ canopydata <- canopydata %>%
 
 # identify factors
 canopydata$sitetype <- as.factor(canopydata$sitetype)
+canopydata$pair <- as.factor(canopydata$pair)
 canopydata$site <- as.factor(canopydata$site)
 canopydata$transect <- as.factor(canopydata$transect)
 canopydata$beltm <- as.factor(canopydata$beltm)
@@ -437,7 +437,7 @@ canopydata <- canopydata[complete.cases(canopydata), ]
 
 # create frequency table of canopy
 dffreq <- canopydata %>%
-  count(sitetype, site, canopy) %>%
+  count(sitetype, pair, site, canopy) %>%
   group_by(site) %>%          
   mutate(prop = prop.table(n))
 dffreq <- as.data.frame(dffreq)
@@ -461,12 +461,11 @@ frequencyofcanopy <- ggplot(
 
 frequencyofcanopy
 
-#ggsave(frequencyofcanopy, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/frequencyofcanopy.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(frequencyofcanopy, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/frequencyofcanopy.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 # model it
-canopybysitetypeglmm <- glmmTMB(prop ~ sitetype, data = dffreqpres, family=beta_family(link="logit"))
+canopybysitetypeglmm <- glmmTMB(prop ~ sitetype + (1|pair), data = dffreqpres, family=beta_family(link="logit"))
 summary(canopybysitetypeglmm)
-
 
 describe(dffreqpres)
 
@@ -474,10 +473,11 @@ describe(dffreqpres)
 
 ### ASSESS VEGETATION STRUCTURE - TREE HEIGHT AND SIZE ----
 
-
-
 # bring in site type
 heightdata$sitetype <- sitedata$'Site type'[match(heightdata$'Site Code', sitedata$'Site code')]
+
+# bring in site pair into beltdata dataframe
+heightdata$pair <- sitedata$'Paired site code'[match(heightdata$'Site Name', sitedata$'Site Name')]
 
 
 # rename 'messy' factor names
@@ -489,6 +489,7 @@ heightdata <- heightdata %>%
 
 # identify factors
 heightdata$sitetype <- as.factor(heightdata$sitetype)
+heightdata$pair <- as.factor(heightdata$pair)
 heightdata$site <- as.factor(heightdata$site)
 heightdata$transect <- as.factor(heightdata$transect)
 heightdata$species <- as.factor(heightdata$species)
@@ -500,7 +501,7 @@ heightdata$height <- as.numeric(heightdata$height)
 
 # summarise
 heightdatasummary <- heightdata %>%
-  group_by(sitetype, site, species) %>%
+  group_by(sitetype, pair, site, species) %>%
   summarise(
     count = n(),
     meanheight = mean(height))
@@ -532,16 +533,18 @@ heightfig2
 
 
 
-
-
 ### STRATA DATA - ASSESS VEGETATION STRUCTURE - VEGETATION STRUCTURE ----
 # load data
 sitedata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Site info")
 stratadata<- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Strata Heights")
 
 # lets look at the canopy first
-# bring in site type into beltdata dataframe
+# bring in site type into strata dataframe
 stratadata$sitetype <- sitedata$'Site type'[match(stratadata$'Site Code', sitedata$'Site code')]
+
+# bring in site pair into strata dataframe
+stratadata$pair <- sitedata$'Paired site code'[match(stratadata$'Site Name', sitedata$'Site Name')]
+
 
 # rename 'messy' factor names
 stratadata <- stratadata %>%
@@ -553,6 +556,7 @@ stratadata <- stratadata %>%
 
 # identify factors
 stratadata$sitetype <- as.factor(stratadata$sitetype)
+stratadata$pair <- as.factor(stratadata$pair)
 stratadata$site <- as.factor(stratadata$site)
 stratadata$transect <- as.factor(stratadata$transect)
 stratadata$beltm <- as.factor(stratadata$beltm)
@@ -571,7 +575,7 @@ stratadata <- na.omit(stratadata)
 
 # create count able of different plant types
 stratacount <- stratadata %>%
-  group_by(sitetype, site, height) %>%          
+  group_by(sitetype, pair, site, height) %>%          
   summarise(
     count = n(),
     tree = sum(Tree),
@@ -617,7 +621,7 @@ stratavegtypecomparison1 <- ggplot(
 
 stratavegtypecomparison1
 
-#ggsave(stratavegtypecomparison1, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/stratavegtypecomparison1.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(stratavegtypecomparison1, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/stratavegtypecomparison1.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
 
@@ -668,7 +672,7 @@ stratacomparesitetypefigurecircle
 
 #summarise 
 stratasumbysite <- stratadata %>%
-  group_by(sitetype, site, height) %>%    #  NEED TO ADD SITE AS GROUPING FACTOR HERE     
+  group_by(sitetype, pair, site, height) %>%    #  NEED TO ADD SITE AS GROUPING FACTOR HERE     
   summarise(
     count = n(),
     tree = sum(Tree)/n(),
@@ -679,7 +683,7 @@ stratasumbysite <- stratadata %>%
 
 #model it - tree frequency by height and site type
 stratasumbysite$treebeta <- (stratasumbysite$tree+.01)
-stratatreehitfrequencyglmm <- glmmTMB(treebeta ~ sitetype * height + (1|site), data = stratasumbysite, family=beta_family(link="logit"))
+stratatreehitfrequencyglmm <- glmmTMB(treebeta ~ sitetype * height + (1|pair/site), data = stratasumbysite, family=beta_family(link="logit"))
 summary(stratatreehitfrequencyglmm)
 Anova(stratatreehitfrequencyglmm)
 
@@ -687,7 +691,7 @@ emmip(stratatreehitfrequencyglmm, height ~ sitetype)
 
 #model it - fern frequency by height and site type
 stratasumbysite$fernbeta <- (stratasumbysite$fern+.01)
-stratafernhitfrequencyglmm <- glmmTMB(fernbeta ~ sitetype * height + (1|site), data = stratasumbysite, family=beta_family(link="logit"))
+stratafernhitfrequencyglmm <- glmmTMB(fernbeta ~ sitetype * height + (1|pair/site), data = stratasumbysite, family=beta_family(link="logit"))
 summary(stratafernhitfrequencyglmm)
 Anova(stratafernhitfrequencyglmm)
 
@@ -696,14 +700,14 @@ emmip(stratafernhitfrequencyglmm, height ~ sitetype)
 
 
 stratasumbysite$shrubbeta <- (stratasumbysite$shrub+.01)
-stratashrubhitfrequencyglmm <- glmmTMB(shrubbeta ~ sitetype * height + (1|site), data = stratasumbysite, family=beta_family(link="logit"))
+stratashrubhitfrequencyglmm <- glmmTMB(shrubbeta ~ sitetype * height + (1|pair/site), data = stratasumbysite, family=beta_family(link="logit"))
 summary(stratashrubhitfrequencyglmm)
 Anova(stratashrubhitfrequencyglmm)
 
 emmip(stratashrubhitfrequencyglmm, height ~ sitetype)
 
 stratasumbysite$herbbeta <- (stratasumbysite$herb+.01)/1.02
-strataherbhitfrequencyglmm <- glmmTMB(herbbeta ~ sitetype * height + (1|site), data = stratasumbysite, family=beta_family(link="logit"))
+strataherbhitfrequencyglmm <- glmmTMB(herbbeta ~ sitetype * height + (1|pair/site), data = stratasumbysite, family=beta_family(link="logit"))
 summary(strataherbhitfrequencyglmm)
 Anova(strataherbhitfrequencyglmm)
 
@@ -711,36 +715,40 @@ emmip(strataherbhitfrequencyglmm, height ~ sitetype)
 
 
 
+
 #### Q1/2d. RECRUIT ABUNDANCE ----
 
-# bring in site type into beltdata datframe
-beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
+# bring in site type into beltdata datframe -  ALREADY DONE ABOVE!!! 
+# beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
 
+# bring in site pair into beltdata dataframe
+# beltdata$pair <- sitedata$'Paired site code'[match(beltdata$'Site Name', sitedata$'Site Name')]
 
-#### Calculate the number recruits per site
-beltdata <- beltdata %>%
-  rename(site = 'Site Name',
-         species = 'Species Name',
-         origin = 'Native or Exotic',
-         counts = 'Counts',
-         recruits = 'Recruits/revegetation') 
-
-
-# identify factors
-beltdata$site <- as.factor(beltdata$site)
-beltdata$species <- as.factor(beltdata$species)
-beltdata$origin <- as.factor(beltdata$origin)
-beltdata$sitetype <- as.factor(beltdata$sitetype)
-
-
-# identify variables
-beltdata$counts <- as.numeric(beltdata$counts)
-beltdata$recruits <-as.numeric(beltdata$recruits)
+# #### Calculate the number recruits per site
+# beltdata <- beltdata %>%
+#   rename(site = 'Site Name',
+#          species = 'Species Name',
+#          origin = 'Native or Exotic',
+#          counts = 'Counts',
+#          recruits = 'Recruits/revegetation') 
+# 
+# 
+# # identify factors
+# beltdata$site <- as.factor(beltdata$site)
+# beltdata$species <- as.factor(beltdata$species)
+# beltdata$origin <- as.factor(beltdata$origin)
+# beltdata$sitetype <- as.factor(beltdata$sitetype)
+# 
+# 
+# 
+# # identify variables
+# beltdata$counts <- as.numeric(beltdata$counts)
+# beltdata$recruits <-as.numeric(beltdata$recruits)
 
 
 # summarise
 beltdatasummary <- beltdata %>%
-  group_by(sitetype, site, origin) %>%
+  group_by(sitetype, pair, site, origin) %>%
   summarise(
     richness = n_distinct(species),
     nostems = sum(counts),
@@ -768,20 +776,11 @@ recruitnativetreerichness
 #ggsave(recruitnativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/recruitnativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 # model it
-recruitrichnessbysitetypemodel <- glm(norecruits ~ sitetype, data = beltdatasummarynative, family = poisson(link = "log"))
+recruitrichnessbysitetypemodel <- glmmTMB(norecruits ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
 summary(recruitrichnessbysitetypemodel)
 r2(recruitrichnessbysitetypemodel)
 
-
-
 describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
-
-
-
-
-
-
-
 
 
 
@@ -813,12 +812,11 @@ exotictreerichness
 
 #ggsave(exotictreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
-exotictreerichness
 
-#include sites with 0 recorded 
+# include sites with 0 recorded 
 
 # model it
-exoticrichnessbysitetypemodel <- glm(richness ~ sitetype, data = beltdatasummaryexotic, family = poisson(link = "log"))
+exoticrichnessbysitetypemodel <- glmmTMB(richness ~ sitetype +(1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
 summary(exoticrichnessbysitetypemodel)
 r2(exoticrichnessbysitetypemodel)
 
@@ -841,16 +839,15 @@ exotictreeabundance <- ggplot(
 
 exotictreeabundance
 
-#ggsave(exotictreeabundance, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(exotictreeabundance, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
-
-exotictreeabundance
 
 # model it
-exoticabundancebysitetypemodel <- glm(nostems ~ sitetype, data = beltdatasummaryexotic, family = poisson(link = "log"))
-
+exoticabundancebysitetypemodel <- glmmTMB(nostems ~ sitetype + (1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
 summary(exoticabundancebysitetypemodel)
 r2(exoticabundancebysitetypemodel)
+
+
 
 
 #### Q3. LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE ---
