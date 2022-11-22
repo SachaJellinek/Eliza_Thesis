@@ -279,17 +279,17 @@ r2(nativegroundcoverbysitetypeglmm)
 exoticgroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-exotic), y=exotic, fill = sitetype)) +
   geom_bar(stat="identity",colour = "black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Percentage exotic of ground cover") +
+  labs(x = 'Site', y = "Exotic groundcover (%)") +
   scale_fill_brewer(palette="Dark2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_blank())+
   theme(axis.ticks.x = element_blank())
 
 exoticgroundcoverpercentage
 
-#ggsave(exoticgroundcoverpercentage, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exoticgroundcoverpercentage.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(exoticgroundcoverpercentage, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/exoticgroundcoverpercentage.tiff", width = 16, height = 12, units = "cm", dpi = 300)
 
 
 # model exotic ground cover using glmm
