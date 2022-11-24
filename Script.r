@@ -82,7 +82,8 @@ beltdatasummary <- beltdata %>%
   summarise(
     richness = n_distinct(species),
     nostems = sum(counts),
-    norecruits = sum(recruits))
+    norecruits = sum(recruits),
+    nativevegcoveragepercentage = mean(nativevegcoveragepercentage))
 
 beltsummarycomplete <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
 
@@ -848,139 +849,22 @@ summary(exoticabundancebysitetypemodel)
 r2(exoticabundancebysitetypemodel)
 
 
-
-
-#### Q3. LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE ---
-
-# bring in site type into beltdata dataframe
-beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
-
-#BRING IN TRANSECT LENGTH DATA 
-
-#### Calculate the number native tree and shrub species per site
-beltdata <- beltdata %>%
-  rename(site = 'Site Name',
-         species = 'Species Name',
-         origin = 'Native or Exotic',
-         counts = 'Counts',
-         recruits = 'Recruits/revegetation') 
-
-
-# identify factors
-beltdata$site <- as.factor(beltdata$site)
-beltdata$species <- as.factor(beltdata$species)
-beltdata$origin <- as.factor(beltdata$origin)
-beltdata$sitetype <- as.factor(beltdata$sitetype)
-
-
-# identify variables
-beltdata$counts <- as.numeric(beltdata$counts)
-beltdata$recruits <-as.numeric(beltdata$recruits)
-
-
-# data exploration - belts
-glimpse(beltdata)
-describe(beltdata)
-# describeBy(beltdata, beltdata$site)
-
-
-# summarise
-beltdatasummary <- beltdata %>%
-  group_by(sitetype, site, origin) %>%
-  summarise(
-    richness = n_distinct(species),
-    nostems = sum(counts),
-    norecruits = sum(recruits))
-
-
-# filter to consider only native
-beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
-describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
-
-# graph native and exotic species richness
-nativetreerichness <- ggplot(
-  data = beltdatasummarynative, aes(x=reorder(site,-richness), y=richness, fill = sitetype)) +
-  geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Richness of native trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
-  guides(colour=guide_legend(title="Site Type"))+
-  guides(fill=guide_legend(title="Site Type"))+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
-
-
-nativetreerichness
-
-ggsave(nativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-# model it
-nativerichnessbysitetypemodel <- glm(richness ~ sitetype, data = beltdatasummarynative, family = poisson(link = "log"))
-summary(richnessbysitetypemodel)
-
-
 #### Q3 LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE - RECRUIT ABUNDANCE ---- 
 
-beltdata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Belt transect counts")
-
-# bring in site type into beltdata dataframe
-beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
-
-#BRING IN TRANSECT LENGTH DATA 
-
-#### Calculate the number native tree and shrub species per site
-beltdata <- beltdata %>%
-  rename(site = 'Site Name',
-         species = 'Species Name',
-         origin = 'Native or Exotic',
-         counts = 'Counts',
-         recruits = 'Recruits/revegetation',
-         nativevegcoveragecounts = 'native veg coverage counts',
-         nativevegcoveragepercentage = 'native veg percentage coverage') 
-
-
-# identify factors
-beltdata$site <- as.factor(beltdata$site)
-beltdata$species <- as.factor(beltdata$species)
-beltdata$origin <- as.factor(beltdata$origin)
-beltdata$sitetype <- as.factor(beltdata$sitetype)
-
-# identify variables
-beltdata$counts <- as.numeric(beltdata$counts)
-beltdata$recruits <-as.numeric(beltdata$recruits)
-beltdata$nativevegcoveragecounts <- as.numeric(beltdata$nativevegcoveragecounts)
-beltdata$nativevegcoveragepercentage <- as.numeric(beltdata$nativevegcoveragepercentage)
-
-# summarise
-beltdatasummary <- beltdata %>%
-  group_by(sitetype, site, origin) %>%
-  summarise(
-    richness = n_distinct(species),
-    nostems = sum(counts),
-    norecruits = sum(recruits),
-    nativevegcoveragepercentage = mean(nativevegcoveragepercentage))
-
-# filter to consider only native
-beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
-
-
-beltdatasummarynative <- filter(beltdatasummarynative, sitetype == "Works")
+# consider only works sites
+beltdatasummarynativeworks <- filter(beltdatasummarynative, sitetype == "Works")
 
 # graph native and exotic species richness
-nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynative, aes(x=nativevegcoveragepercentage, y=norecruits)) +
+nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(x=nativevegcoveragepercentage, y=norecruits)) +
   geom_jitter(size = 2, color = "darkorange3") +
   geom_smooth (method = "glm", method.args = list(family = "poisson"),
                colour = "darkblue") +
   labs(x = 'Percentage of Native Woody Vegetation ', y = "Number of recruits") +
   theme_classic()
 
-
 nativewoodyvegcoveragerecruits
 
 #ggsave(nativewoodyvegcoveragerecruits, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativewoodyvegcoveragerecruits.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
 
 nativevegcovervrecruits <- glm(norecruits ~ nativevegcoveragepercentage, data = beltdatasummarynative,   family = poisson(link = "log"))
 summary(nativevegcovervrecruits)
@@ -1051,12 +935,12 @@ finewdcovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoveragewor
 
 finewdcovervsnativecoveragegraph
 
-#model it - need to do beta
-groundcovervsnativecoverage$nativebeta <- groundcovervsnativecoverage$native/100
-
-nativecovervsnativecoverageglm <- glm(nativebeta ~ nativevegcoveragepercentage, data = groundcovervsnativecoverage,   family = beta_family())
-summary(nativecovervsnativecoverageglm)
-r2(nativecovervsnativecoverageglm)
+# #model it - need to do beta
+# groundcovervsnativecoverage$nativebeta <- groundcovervsnativecoverage$native/100
+# 
+# nativecovervsnativecoverageglm <- glm(nativebeta ~ nativevegcoveragepercentage, data = groundcovervsnativecoverage,   family = beta_family())
+# summary(nativecovervsnativecoverageglm)
+# r2(nativecovervsnativecoverageglm)
 
 
 #### Q3. BROWSER POO FREQUENCY ----
@@ -1067,6 +951,9 @@ poodata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "P
 # bring in site type into poodata dataframe
 poodata$sitetype <- sitedata$'Site type'[match(poodata$'Site Code', sitedata$'Site code')]
 
+# bring in site pair into beltdata dataframe
+poodata$pair <- sitedata$'Paired site code'[match(poodata$'Site Name', sitedata$'Site Name')]
+
 # rename 'messy' factor names
 poodata <- poodata %>%
   rename(site = 'Site Name',
@@ -1076,6 +963,7 @@ poodata <- poodata %>%
 
 # identify factors
 poodata$sitetype <- as.factor(poodata$sitetype)
+poodata$pair <- as.factor(poodata$pair)
 poodata$site <- as.factor(poodata$site)
 poodata$transect <- as.factor(poodata$transect)
 poodata$belt <- as.factor(poodata$belt)
@@ -1098,7 +986,7 @@ poodata$Deer <- as.numeric(poodata$Deer)
 
 # create count able of browser poo counts
 poodatacount <- poodata %>%
-  group_by(sitetype, site) %>%          
+  group_by(sitetype, pair, site) %>%          
   summarise(
     count = n(),
     kanga = sum(Kangaroo),
@@ -1108,7 +996,7 @@ poodatacount <- poodata %>%
 
 # create table of browser poo frequency # NOTE DF NAME SAME AS ABOVE 
 poodatacount <- poodata %>%
-  group_by(sitetype, site) %>%          
+  group_by(sitetype, pair, site) %>%          
   summarise(
     count = n(),
     kanga = sum(Kangaroo)/count,
@@ -1140,9 +1028,9 @@ browsertotal
 # merge poodata and beltdata
 beltdatasummarynative$browsers <- poodatacount$total[match(beltdatasummarynative$site, poodatacount$site)]  
 
-beltdatasummarynative <- filter(beltdatasummarynative, sitetype == "Works")
+beltdatasummarynativeworks <- filter(beltdatasummarynative, sitetype == "Works")
 
-browservrecruit <- ggplot(data = beltdatasummarynative, aes(x=browsers, y=norecruits)) +
+browservrecruit <- ggplot(data = beltdatasummarynativeworks, aes(x=browsers, y=norecruits)) +
   geom_jitter(size = 2, color = "darkorange2") +
   geom_smooth (method = "glm",method.args = list(family = "poisson"),
                colour = "darkblue") +
@@ -1154,18 +1042,13 @@ browservrecruit
 #ggsave(browservrecruit, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/browservrecruit.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
-browservrecruitmodel <- glm(norecruits ~ browsers, data = beltdatasummarynative, family = poisson(link = "log"))
+browservrecruitmodel <- glm(norecruits ~ browsers, data = beltdatasummarynativeworks, family = poisson(link = "log"))
 summary(browservrecruitmodel)
 r2(browservrecruitmodel)
 
 
 
-
-
-
-
 #### Q3. SOIL ANALYSIS bulk density ----
-
 
 beltdata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Belt transect counts")
 
@@ -1471,3 +1354,4 @@ covervssoilworks$exoticbeta <- covervssoilworks$exotic/100
 phosphorusvsecoticcoverglm <- glm(exoticbeta ~ totalphosporus, data = covervssoilworks,   family = beta_family())
 summary(phosphorusvsecoticcoverglm)
 r2(phosphorusvsecoticcoverglm)
+
