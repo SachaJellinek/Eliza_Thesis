@@ -8,7 +8,7 @@
 # Date: XXXXXX                                              #
 
 
-# load required packages
+# load required packages ----
 library(readxl)
 library(dplyr)
 library(lubridate)
@@ -20,6 +20,7 @@ library(tidyr)
 library(car)
 library(emmeans)
 library(performance)
+library(ggpubr)
 
 # Set working directory - WERG drive
 setwd("~/uomShare/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
@@ -116,6 +117,24 @@ r2(nativerichnessbysitetypemodel)
 describe(beltdata)
 
 
+# BOX PLOT OF NATIVE RICHNESS
+
+nativetreerichnessBOX <- ggplot(
+  data = beltdatasummarynative, aes(x=sitetype, y=richness, fill = sitetype)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_boxplot(geom = "errorbar", width = 0.1) +
+  geom_jitter(width = 0.1) +
+  labs(x = 'Site', y = "Native woody richness") +
+  scale_fill_brewer(palette="Paired")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  expand_limits(y = 0) +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+nativetreerichnessBOX
+
+
 
 #### Q1/2a. NATIVE TREE AND SHRUB ABUNDANCE ----
 
@@ -155,7 +174,7 @@ beltdatasummarynative$stemsperha <- round(beltdatasummarynative$nostems/beltdata
 nativetreeabundance <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site,-stemsperha), y=stemsperha, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Native tree and shrub density (stems/ha") +
+  labs(x = 'Site', y = "Native tree and shrub density (stems/ha)") +
   scale_fill_brewer(palette="Dark2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
@@ -176,7 +195,174 @@ nativeabundanceperhabysitetypemodel <- glmmTMB(stemsperha ~ sitetype + (1|pair),
 summary(nativeabundanceperhabysitetypemodel)
 r2(nativeabundanceperhabysitetypemodel)
 
-#### IVE UPDATED THE CODE UP TO HERE #####
+
+# BOX PLOT OF NATIVE WOODY PLANT ABUNDANCE
+
+nativetreeabundanceBOX <- ggplot(
+  data = beltdatasummarynative, aes(x=sitetype, y=stemsperha, fill = sitetype)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_boxplot(geom = "errorbar", width = 0.1) +
+  geom_jitter(width = 0.1) +
+  labs(x = 'Site', y = "Native woody plant density") +
+  scale_fill_brewer(palette="Paired")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  expand_limits(y = 0) +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+nativetreeabundanceBOX
+
+
+#### Q1/2d. RECRUIT ABUNDANCE ----
+
+# calculate recruits per belt area into count data
+beltdatasummarynative$norecruitsperha <- round(beltdatasummarynative$norecruits/beltdatasummarynative$totalbeltarea*10000)
+
+
+# graph native and exotic species richness
+recruitnativetreerichness <- ggplot(
+  data = beltdatasummarynative, aes(x=reorder(site,-norecruits), y=norecruits, fill = sitetype)) +
+  geom_bar(stat="identity", color = "black", position = position_dodge(preserve = "single")) +
+  labs(x = 'Site', y = "Number of native woody recruits") +
+  scale_fill_brewer(palette="Dark2")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+
+recruitnativetreerichness
+
+#ggsave(recruitnativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/recruitnativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+
+# model it
+recruitrichnessbysitetypemodel <- glmmTMB(norecruits ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
+summary(recruitrichnessbysitetypemodel)
+r2(recruitrichnessbysitetypemodel)
+
+describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
+
+
+
+# NATIVE RECRUITS BOXPLOT
+nativerecruitsBOX <- ggplot(
+  data = beltdatasummarynative, aes(x=sitetype, y=norecruitsperha, fill = sitetype)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_boxplot(geom = "errorbar", width = 0.1) +
+  geom_jitter(width = 0.1) +
+  expand_limits(y = 0) +
+  labs(x = 'Site', y = "Native woody recruits (stems/ha)") +
+  scale_fill_brewer(palette="Paired")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+nativerecruitsBOX
+
+#### Q1/3a. EXOTIC TREE AND SHRUB Richness----
+
+# fill in missing cases for exotic taxa
+beltdatasummary <- beltdatasummary[complete.cases(beltdatasummary),]
+beltdatasummary <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
+
+# filter to only consider exotic
+beltdatasummaryexotic <- filter(beltdatasummary, origin == "Exotic")
+describeBy(beltdatasummaryexotic, beltdatasummaryexotic$sitetype)
+
+# old figure of raw data
+exotictreerichness <- ggplot(data = beltdatasummaryexotic, aes(x=reorder(site,-richness), y=richness, fill = sitetype)) +
+  geom_bar(stat="identity", color ="black", position = position_dodge(preserve = "single")) +
+  labs(x = 'Site', y = "Richness of exotic trees and shrubs") +
+  scale_fill_brewer(palette="Dark2")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+
+exotictreerichness
+
+#ggsave(exotictreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+
+# model it
+exoticrichnessbysitetypemodel <- glmmTMB(richness ~ sitetype +(1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
+summary(exoticrichnessbysitetypemodel)
+r2(exoticrichnessbysitetypemodel)
+
+
+# EXOTIC RICHNESS BOXPLOT
+exotictreerichnessBOX <- ggplot(
+  data = beltdatasummaryexotic, aes(x=sitetype, y=richness, fill = sitetype)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_boxplot(geom = "errorbar", width = 0.1) +
+  geom_jitter(width = 0.1, height = 0) +
+  expand_limits(y = 0) +
+  labs(x = 'Site', y = "Exotic woody richness") +
+  scale_fill_brewer(palette="Paired")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+exotictreerichnessBOX
+
+
+#### Q1/3a. EXOTIC TREE AND SHRUB ABUNDANCE ----
+
+# incorporate belt area into exotic count data
+beltdatasummaryexotic$totalbeltarea <- beltlengthdata$totalbeltarea[match(beltdatasummaryexotic$site, beltlengthdata$site)]
+beltdatasummaryexotic$stemsperha <- round(beltdatasummaryexotic$nostems/beltdatasummarynative$totalbeltarea*10000)
+
+# graph of raw data
+exotictreeabundance <- ggplot(
+  data =  beltdatasummaryexotic, aes(x=reorder(site,-nostems), y=nostems, fill = sitetype)) +
+  geom_bar(stat="identity", color="black", position = position_dodge(preserve = "single")) +
+  labs(x = 'Site', y = "Abundance of exotic trees and shrubs") +
+  scale_fill_brewer(palette="Dark2")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+
+exotictreeabundance
+
+# ggsave(exotictreeabundance, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+
+
+# model it
+exoticabundancebysitetypemodel <- glmmTMB(nostems ~ sitetype + (1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
+summary(exoticabundancebysitetypemodel)
+r2(exoticabundancebysitetypemodel)
+
+
+# EXOTIC Woody plant abundance BOXPLOT
+exotictreeabundanceBOX <- ggplot(
+  data = beltdatasummaryexotic, aes(x=sitetype, y=stemsperha, fill = sitetype)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_boxplot(geom = "errorbar", width = 0.1) +
+  geom_jitter(width = 0.1) +
+  expand_limits(y = 0) +
+  labs(x = 'Site', y = "Exotic woody density") +
+  scale_fill_brewer(palette="Paired")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank())
+exotictreeabundanceBOX
+
+
+# combine belt transect data boxplots
+boxmedley <- ggarrange(nativetreerichnessBOX, nativetreeabundanceBOX, exotictreerichnessBOX, exotictreeabundanceBOX, align = "hv", ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"), common.legend = TRUE)
+boxmedley
+
+# ggsave(boxmedley, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+
+
+
 
 
 
@@ -717,136 +903,8 @@ emmip(strataherbhitfrequencyglmm, height ~ sitetype)
 
 
 
-#### Q1/2d. RECRUIT ABUNDANCE ----
-
-# bring in site type into beltdata datframe -  ALREADY DONE ABOVE!!! 
-# beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
-
-# bring in site pair into beltdata dataframe
-# beltdata$pair <- sitedata$'Paired site code'[match(beltdata$'Site Name', sitedata$'Site Name')]
-
-# #### Calculate the number recruits per site
-# beltdata <- beltdata %>%
-#   rename(site = 'Site Name',
-#          species = 'Species Name',
-#          origin = 'Native or Exotic',
-#          counts = 'Counts',
-#          recruits = 'Recruits/revegetation') 
-# 
-# 
-# # identify factors
-# beltdata$site <- as.factor(beltdata$site)
-# beltdata$species <- as.factor(beltdata$species)
-# beltdata$origin <- as.factor(beltdata$origin)
-# beltdata$sitetype <- as.factor(beltdata$sitetype)
-# 
-# 
-# 
-# # identify variables
-# beltdata$counts <- as.numeric(beltdata$counts)
-# beltdata$recruits <-as.numeric(beltdata$recruits)
 
 
-# summarise
-beltdatasummary <- beltdata %>%
-  group_by(sitetype, pair, site, origin) %>%
-  summarise(
-    richness = n_distinct(species),
-    nostems = sum(counts),
-    norecruits = sum(recruits))
-
-
-# filter to consider only native
-beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
-describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
-
-# graph native and exotic species richness
-recruitnativetreerichness <- ggplot(
-  data = beltdatasummarynative, aes(x=reorder(site,-norecruits), y=norecruits, fill = sitetype)) +
-  geom_bar(stat="identity", color = "black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Number of native woody recruits") +
-  scale_fill_brewer(palette="Dark2")+
-  guides(colour=guide_legend(title="Site Type"))+
-  guides(fill=guide_legend(title="Site Type"))+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
-
-recruitnativetreerichness
-
-#ggsave(recruitnativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/recruitnativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-# model it
-recruitrichnessbysitetypemodel <- glmmTMB(norecruits ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
-summary(recruitrichnessbysitetypemodel)
-r2(recruitrichnessbysitetypemodel)
-
-describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
-
-
-
-
-
-
-#### Q1/3a. EXOTIC TREE AND SHRUB Richness----
-
-beltdatasummary <- beltdatasummary[complete.cases(beltdatasummary),]
-beltdatasummary <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
-
-
-# filter to only consider exotic
-beltdatasummaryexotic <- filter(beltdatasummary, origin == "Exotic")
-describeBy(beltdatasummaryexotic, beltdatasummaryexotic$sitetype)
-
-
-exotictreerichness <- ggplot(data = beltdatasummaryexotic, aes(x=reorder(site,-richness), y=richness, fill = sitetype)) +
-  geom_bar(stat="identity", color ="black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Richness of exotic trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
-  guides(colour=guide_legend(title="Site Type"))+
-  guides(fill=guide_legend(title="Site Type"))+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
-
-exotictreerichness
-
-#ggsave(exotictreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-# include sites with 0 recorded 
-
-# model it
-exoticrichnessbysitetypemodel <- glmmTMB(richness ~ sitetype +(1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
-summary(exoticrichnessbysitetypemodel)
-r2(exoticrichnessbysitetypemodel)
-
-
-
-
-
-#### Q1/3a. EXOTIC TREE AND SHRUB ABUNDANCE ----
-
-exotictreeabundance <- ggplot(
-  data =  beltdatasummaryexotic, aes(x=reorder(site,-nostems), y=nostems, fill = sitetype)) +
-  geom_bar(stat="identity", color="black", position = position_dodge(preserve = "single")) +
-  labs(x = 'Site', y = "Abundance of exotic trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
-  guides(colour=guide_legend(title="Site Type"))+
-  guides(fill=guide_legend(title="Site Type"))+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
-
-exotictreeabundance
-
-# ggsave(exotictreeabundance, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-# model it
-exoticabundancebysitetypemodel <- glmmTMB(nostems ~ sitetype + (1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
-summary(exoticabundancebysitetypemodel)
-r2(exoticabundancebysitetypemodel)
 
 
 #### Q3 LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE - RECRUIT ABUNDANCE ---- 
