@@ -98,13 +98,14 @@ nativetreerichness <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site, -richness), y=richness, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Richness of native trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
   theme(axis.ticks.x = element_blank())
 nativetreerichness
+nativetreerichness <- nativetreerichness + theme(legend.position = "none")
 
 #ggsave(nativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
@@ -125,15 +126,17 @@ nativetreerichnessBOX <- ggplot(
   stat_boxplot(geom = "errorbar", width = 0.1) +
   geom_jitter(width = 0.1) +
   labs(x = 'Site', y = "Native woody richness") +
-  scale_fill_brewer(palette="Paired")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   expand_limits(y = 0) +
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank())
 nativetreerichnessBOX
-
+nativetreerichnessBOX <- nativetreerichnessBOX + theme(legend.position = "none")
 
 
 #### Q1/2a. NATIVE TREE AND SHRUB ABUNDANCE ----
@@ -142,7 +145,7 @@ nativetreeabundance <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site,-nostems), y=nostems, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Abundance of native trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -175,7 +178,7 @@ nativetreeabundance <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site,-stemsperha), y=stemsperha, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Native tree and shrub density (stems/ha)") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -204,15 +207,17 @@ nativetreeabundanceBOX <- ggplot(
   stat_boxplot(geom = "errorbar", width = 0.1) +
   geom_jitter(width = 0.1) +
   labs(x = 'Site', y = "Native woody plant density") +
-  scale_fill_brewer(palette="Paired")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   expand_limits(y = 0) +
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank())
 nativetreeabundanceBOX
-
+nativetreeabundanceBOX <- nativetreeabundanceBOX + theme(legend.position = "none")
 
 #### Q1/2d. RECRUIT ABUNDANCE ----
 
@@ -225,7 +230,7 @@ recruitnativetreerichness <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site,-norecruits), y=norecruits, fill = sitetype)) +
   geom_bar(stat="identity", color = "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Number of native woody recruits") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -253,13 +258,16 @@ nativerecruitsBOX <- ggplot(
   geom_jitter(width = 0.1) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Native woody recruits (stems/ha)") +
-  scale_fill_brewer(palette="Paired")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank())
 nativerecruitsBOX
+nativerecruitsBOX <- nativerecruitsBOX + theme(legend.position = "none")
 
 #### Q1/3a. EXOTIC TREE AND SHRUB Richness----
 
@@ -275,7 +283,7 @@ describeBy(beltdatasummaryexotic, beltdatasummaryexotic$sitetype)
 exotictreerichness <- ggplot(data = beltdatasummaryexotic, aes(x=reorder(site,-richness), y=richness, fill = sitetype)) +
   geom_bar(stat="identity", color ="black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Richness of exotic trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -300,14 +308,16 @@ exotictreerichnessBOX <- ggplot(
   geom_jitter(width = 0.1, height = 0) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Exotic woody richness") +
-  scale_fill_brewer(palette="Paired")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank())
 exotictreerichnessBOX
-
+exotictreerichnessBOX <- exotictreerichnessBOX + theme(legend.position = "none")
 
 #### Q1/3a. EXOTIC TREE AND SHRUB ABUNDANCE ----
 
@@ -320,7 +330,7 @@ exotictreeabundance <- ggplot(
   data =  beltdatasummaryexotic, aes(x=reorder(site,-nostems), y=nostems, fill = sitetype)) +
   geom_bar(stat="identity", color="black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Abundance of exotic trees and shrubs") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -328,6 +338,7 @@ exotictreeabundance <- ggplot(
   theme(axis.ticks.x = element_blank())
 
 exotictreeabundance
+
 
 # ggsave(exotictreeabundance, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
@@ -346,20 +357,24 @@ exotictreeabundanceBOX <- ggplot(
   geom_jitter(width = 0.1) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Exotic woody density") +
-  scale_fill_brewer(palette="Paired")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  theme(axis.ticks.x = element_blank())
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank())
 exotictreeabundanceBOX
+legend <- get_legend(exotictreeabundanceBOX)
+exotictreeabundanceBOX <- exotictreeabundanceBOX + theme(legend.position = "none")
 
 
 # combine belt transect data boxplots
-boxmedley <- ggarrange(nativetreerichnessBOX, nativetreeabundanceBOX, exotictreerichnessBOX, exotictreeabundanceBOX, align = "hv", ncol = 2, nrow = 2, labels = c("A", "B", "C", "D"), common.legend = TRUE)
+boxmedley <- ggarrange(nativetreerichnessBOX, exotictreerichnessBOX, legend,  nativetreeabundanceBOX, exotictreeabundanceBOX, nativerecruitsBOX, align = "v", ncol = 3, nrow = 2, labels = c("A", "B", "", "C", "D", "E"))
 boxmedley
 
-# ggsave(boxmedley, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exotictreeabundance.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(boxmedley, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/boxplotmedley.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
 
 
 
@@ -439,7 +454,7 @@ nativegroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-native), y=native, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Percentage native of ground cover") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -467,7 +482,7 @@ exoticgroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-exotic), y=exotic, fill = sitetype)) +
   geom_bar(stat="identity",colour = "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Exotic groundcover (%)") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -491,7 +506,7 @@ finewdgroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-finewd), y=finewd, fill = sitetype)) +
   geom_bar(stat="identity",colour = "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Percentage of fine woody debris ground cover") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -512,7 +527,7 @@ coarsewdgroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-coarsewd), y=coarsewd, fill = sitetype)) +
   geom_bar(stat="identity",color = "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Percentage of coarse woody debris ground cover") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -534,7 +549,7 @@ baregroundgroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-bareground), y=bareground, fill = sitetype)) +
   geom_bar(stat="identity",color = "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Percentage of bare ground cover") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -576,17 +591,19 @@ covertypecomparisonfigure <- ggplot(
   geom_bar(stat = "identity", aes(fill = sitetype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
   geom_errorbar(aes(ymin=meancover-coverse, ymax=meancover+coverse), position = position_dodge(0.9, preserve = "single"), width=0.1, size=0.5, color="black") +
   ylim(0, 100) +
-  labs(x= NULL, y = "Cover %") +
-  scale_fill_brewer(palette="Dark2")+
+  labs(x= NULL, y = "Understorey cover %") +
+  scale_x_discrete(breaks=c("native","exotic","finewd", "coarsewd", "bareground"),
+                   labels=c("Native","Exotic","FWD", "CWD", "Bare ground")) +
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 0))+
   theme(axis.ticks.x = element_blank())
 
 covertypecomparisonfigure
 
-# ggsave(covertypecomparisonfigure, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/covertypecomparisonfigure.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(covertypecomparisonfigure, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/understoreycovers.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
 
 
 
@@ -639,7 +656,7 @@ frequencyofcanopy <- ggplot(
   data = dffreqpres, aes(x=reorder(site,-prop), y= prop*100, fill = sitetype)) +   geom_bar(stat = "identity", aes(fill = sitetype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
   ylim(0, 100) +
   labs(x="Site", y = "Canopy cover %")+
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -799,7 +816,7 @@ stratavegtypecomparison1 <- ggplot(
   geom_bar(stat = "identity", aes(fill = sitetype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
   ylim(0, 1) +
   labs(x= NULL, y = "Frequency") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -812,13 +829,13 @@ stratavegtypecomparison1
 
 
 
-# OPTION 2 #### THE ONE I"M USING 
+# OPTION 2 #### THE ONE I"M USING # NB. NO ERROR BARS! Need to create df from site summary (which is below) to create errorbars
 stratasitesypecomparison <- ggplot(
   data = stratasumlong, aes(x=height, y= frequency, fill = planttype)) +
   geom_bar(stat = "identity", aes(fill = planttype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
   ylim(0, 1) +
   labs(x= NULL, y = "Frequency") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Plant form"))+
   guides(fill=guide_legend(title="Plant form"))+
   theme_classic()+
@@ -903,10 +920,6 @@ emmip(strataherbhitfrequencyglmm, height ~ sitetype)
 
 
 
-
-
-
-
 #### Q3 LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE - RECRUIT ABUNDANCE ---- 
 
 # consider only works sites
@@ -959,18 +972,13 @@ summary(exoticgroundcovervsnativecoverageglm)
 summ(exoticgroundcovervsnativecoverageglm)
 
 
-
 #COMPARE TO NATIVE COVER
-
-
 #graph it 
 nativecovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoverageworks, aes(x=nativevegcoveragepercentage, y=native)) +
   geom_jitter(size = 2, color = "darkorange3") +
   
   labs(x = 'Percentage of Native Woody Vegetation', y = "Native ground cover(%)") +
   theme_classic()
-
-
 nativecovervsnativecoveragegraph
 
 #ggsave(nativecovervsnativecoveragegraph, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativecovervsnativecoveragegraph.tiff", width = 16, height = 12, units = "cm", dpi = 600)
@@ -1072,7 +1080,7 @@ browsertotal <- ggplot(
   data = poodatacount, aes(x=reorder(site,-total), y=total, fill = sitetype)) +
   geom_bar(stat="identity", colour = "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Frequency of browser pellets") +
-  scale_fill_brewer(palette="Dark2")+
+  scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -1362,11 +1370,11 @@ soildatasummary <- soildata %>%
 covervssoil <- full_join(quadratdatasummary, soildata, by='site')
 
 #compare remant vs work sites
-boxplot(totalnitrogen ~ sitetype, data =covervssoil)
+boxplot(totalnitrogen ~ sitetype.x, data =covervssoil)
 
-boxplot(totalphosporus ~ sitetype, data =covervssoil)
+boxplot(totalphosporus ~ sitetype.x, data =covervssoil)
 
-boxplot(bulkdensityraverage ~ sitetype, data =covervssoil)
+boxplot(bulkdensityraverage ~ sitetype.x, data =covervssoil)
 
 #restrict analysis to worksites 
 
