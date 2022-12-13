@@ -74,7 +74,19 @@ beltdata$recruits <-as.numeric(beltdata$recruits)
 # data exploration - belts
 glimpse(beltdata)
 describe(beltdata)
-# describeBy(beltdata, beltdata$site)
+describeBy(beltdata, beltdata$sitetype)
+
+
+# species level summaries
+# summary totals - propagules - taxa
+sort(unique(beltdata$species)) # SOME OF THESE ARE NOT WOODY SPECIES!!!
+beltdata <- filter(beltdata, species != "Poa labillardierei")
+# CHECK FOR OTHERS
+
+with(beltdata, tapply(species, list(sitetype), FUN = function(x) length(unique(x))))
+with(beltdata, tapply(species, list(site), FUN = function(x) length(unique(x))))
+with(beltdata, tapply(species, list(sitetype, origin), FUN = function(x) length(unique(x))))
+with(beltdata, tapply(species, list(origin), FUN = function(x) length(unique(x))))
 
 
 # summarise
@@ -84,16 +96,20 @@ beltdatasummary <- beltdata %>%
     richness = n_distinct(species),
     nostems = sum(counts),
     norecruits = sum(recruits),
-    nativevegcoveragepercentage = mean(nativevegcoveragepercentage))
+    nativevegcoveragepercentage = mean(nativevegcoveragepercentage),
+    totalnitrogen = mean(totalnitrogen),
+    totalphosporus = mean(totalphosporus),
+    bulkdensityaverage = mean(bulkdensityaverage))
 
 beltsummarycomplete <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
 
 
+   
 # filter to consider only native
 beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
 describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
 
-# graph native and exotic species richness
+# graph native species richness
 nativetreerichness <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site, -richness), y=richness, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
@@ -114,8 +130,6 @@ nativetreerichness <- nativetreerichness + theme(legend.position = "none")
 nativerichnessbysitetypemodel <- glmmTMB(richness ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
 summary(nativerichnessbysitetypemodel)
 r2(nativerichnessbysitetypemodel)
-
-describe(beltdata)
 
 
 # BOX PLOT OF NATIVE RICHNESS
@@ -172,6 +186,9 @@ beltlengthdata <- sitedata2 %>%
 # incorporate belt area into count data
 beltdatasummarynative$totalbeltarea <- beltlengthdata$totalbeltarea[match(beltdatasummarynative$site, beltlengthdata$site)]
 beltdatasummarynative$stemsperha <- round(beltdatasummarynative$nostems/beltdatasummarynative$totalbeltarea*10000)
+describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
+
+
 
 # plot with new data
 nativetreeabundance <- ggplot(
@@ -219,10 +236,13 @@ nativetreeabundanceBOX <- ggplot(
 nativetreeabundanceBOX
 nativetreeabundanceBOX <- nativetreeabundanceBOX + theme(legend.position = "none")
 
+
+
 #### Q1/2d. RECRUIT ABUNDANCE ----
 
 # calculate recruits per belt area into count data
 beltdatasummarynative$norecruitsperha <- round(beltdatasummarynative$norecruits/beltdatasummarynative$totalbeltarea*10000)
+describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
 
 
 # graph native and exotic species richness
@@ -242,12 +262,9 @@ recruitnativetreerichness
 #ggsave(recruitnativetreerichness, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/recruitnativetreerichness.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 # model it
-recruitrichnessbysitetypemodel <- glmmTMB(norecruits ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
+recruitrichnessbysitetypemodel <- glmmTMB(norecruitsperha ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
 summary(recruitrichnessbysitetypemodel)
 r2(recruitrichnessbysitetypemodel)
-
-describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
-
 
 
 # NATIVE RECRUITS BOXPLOT
@@ -268,6 +285,8 @@ nativerecruitsBOX <- ggplot(
         axis.text.x=element_blank())
 nativerecruitsBOX
 nativerecruitsBOX <- nativerecruitsBOX + theme(legend.position = "none")
+
+
 
 #### Q1/3a. EXOTIC TREE AND SHRUB Richness----
 
@@ -324,6 +343,8 @@ exotictreerichnessBOX <- exotictreerichnessBOX + theme(legend.position = "none")
 # incorporate belt area into exotic count data
 beltdatasummaryexotic$totalbeltarea <- beltlengthdata$totalbeltarea[match(beltdatasummaryexotic$site, beltlengthdata$site)]
 beltdatasummaryexotic$stemsperha <- round(beltdatasummaryexotic$nostems/beltdatasummarynative$totalbeltarea*10000)
+describeBy(beltdatasummaryexotic, beltdatasummaryexotic$sitetype)
+
 
 # graph of raw data
 exotictreeabundance <- ggplot(
@@ -344,7 +365,7 @@ exotictreeabundance
 
 
 # model it
-exoticabundancebysitetypemodel <- glmmTMB(nostems ~ sitetype + (1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
+exoticabundancebysitetypemodel <- glmmTMB(stemsperha ~ sitetype + (1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
 summary(exoticabundancebysitetypemodel)
 r2(exoticabundancebysitetypemodel)
 
@@ -372,6 +393,7 @@ exotictreeabundanceBOX <- exotictreeabundanceBOX + theme(legend.position = "none
 
 # combine belt transect data boxplots
 boxmedley <- ggarrange(nativetreerichnessBOX, exotictreerichnessBOX, legend,  nativetreeabundanceBOX, exotictreeabundanceBOX, nativerecruitsBOX, align = "v", ncol = 3, nrow = 2, labels = c("A", "B", "", "C", "D", "E"))
+boxmedley <- ggarrange(nativetreerichnessBOX, nativetreeabundanceBOX, nativerecruitsBOX, exotictreerichnessBOX, exotictreeabundanceBOX, legend, align = "v", ncol = 3, nrow = 2, labels = c("A", "B", "C", "D", "E", "")) # different order
 boxmedley
 
 # ggsave(boxmedley, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/boxplotmedley.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
@@ -388,10 +410,8 @@ quadratdata$sitetype <- sitedata$'Site type'[match(quadratdata$'Site Name', site
 # bring in site pair into beltdata dataframe
 quadratdata$pair <- sitedata$'Paired site code'[match(quadratdata$'Site Name', sitedata$'Site Name')]
 
-describe(quadratdata)
 
 # Rename the different coverage types
-
 quadratdata <- quadratdata %>%
   rename(site = 'Site Name',
          transectno = 'Transect Number',
@@ -404,6 +424,10 @@ quadratdata <- quadratdata %>%
          rockcover = 'Rock Cover',
          water = 'Water') 
 
+
+# summarise data
+describe(quadratdata)
+describeBy(quadratdata, quadratdata$sitetype)
 
 
 # identify factors
@@ -423,9 +447,6 @@ quadratdata$rockcover <-as.numeric(quadratdata$rockcover)
 quadratdata$water <-as.numeric(quadratdata$water)
 
 
-
-
-
 # summarise
 quadratdatasummary <- quadratdata %>%
   group_by(sitetype, pair, site) %>%
@@ -438,18 +459,16 @@ quadratdatasummary <- quadratdata %>%
     rockcover = mean(rockcover, na.rm = TRUE ),
     water = mean(water, na.rm = TRUE)
   )
-
 quadratdatasummary
 
-quadratdatasummaryremnant <- filter(quadratdatasummary, sitetype == "Remnant")
-quadratdatasummaryworks <- filter(quadratdatasummary, sitetype == "Works")
+
+# summarise data
+describe(quadratdatasummary)
+describeBy(quadratdatasummary, quadratdatasummary$sitetype)
 
 
-describe(quadratdatasummaryremnant)
-describe(quadratdatasummaryworks)
 
 # graph native ground cover percentages
-
 nativegroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-native), y=native, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
@@ -474,10 +493,7 @@ summary(nativegroundcoverbysitetypeglmm)
 r2(nativegroundcoverbysitetypeglmm)
 
 
-
-
 # graph exotic ground cover percentages
-
 exoticgroundcoverpercentage <- ggplot(
   data = quadratdatasummary,  aes(x=reorder(site,-exotic), y=exotic, fill = sitetype)) +
   geom_bar(stat="identity",colour = "black", position = position_dodge(preserve = "single")) +
@@ -593,7 +609,7 @@ covertypecomparisonfigure <- ggplot(
   ylim(0, 100) +
   labs(x= NULL, y = "Understorey cover %") +
   scale_x_discrete(breaks=c("native","exotic","finewd", "coarsewd", "bareground"),
-                   labels=c("Native","Exotic","FWD", "CWD", "Bare ground")) +
+                   labels=c("Native plants","Exotic plants","Leaf litter", "Woody debris", "Bare ground")) +
   scale_fill_brewer(palette="Set2")+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
@@ -603,7 +619,7 @@ covertypecomparisonfigure <- ggplot(
 
 covertypecomparisonfigure
 
-# ggsave(covertypecomparisonfigure, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/understoreycovers.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
+# ggsave(covertypecomparisonfigure, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/understoreycovers.tiff", width = 210, height = 120, units = c("mm"), bg = "white", dpi = 300)
 
 
 
@@ -735,6 +751,8 @@ heightfig2 <- ggplot(
   theme(axis.text.x = element_text(angle = 90))
 heightfig2
 
+describeBy(heightdatasummary, heightdatasummary$sitetype)
+
 
 
 ### STRATA DATA - ASSESS VEGETATION STRUCTURE - VEGETATION STRUCTURE ----
@@ -809,7 +827,8 @@ stratasumlong <- stratasum %>%
 
 
 # Figure for frequency of different plant types at different heights by sitetype
-# NB. AGAIN, MIGHT BE BEST TO DO THIS WITH EAST V WEST SEPARATED?
+
+
 # OPTION 1
 stratavegtypecomparison1 <- ggplot(
   data = stratasumlong, aes(x=height, y= frequency, fill = sitetype)) +
@@ -885,7 +904,46 @@ stratasumbysite <- stratadata %>%
     herb = sum(Herbaceous)/n())
 
 
-#model it - tree frequency by height and site type
+# convert to long form for graphing
+stratasumbysitelong <- stratasumbysite %>%
+  pivot_longer(cols = tree:herb, names_to = "planttype", values_to = "frequency")
+
+
+#summarise by sitetype and planttype
+stratasumbysitelongsum <- stratasumbysitelong %>%
+  group_by(sitetype, height, planttype) %>%    #  NEED TO ADD SITE AS GROUPING FACTOR HERE     
+  summarise(
+    meanfreq = mean(frequency),
+    sefreq = sd(frequency)/sqrt(n()))
+
+
+# FIGURE FOR PAPER
+stratasumbysitelongsum$planttype <- factor(stratasumbysitelongsum$planttype, levels=c("tree","shrub","herb","fern"),labels=c("Tree","Shrub","Herb","Fern"))
+
+stratavegtypesitetypecomparison <- ggplot(
+  data = stratasumbysitelongsum, aes(x=height, y= meanfreq, fill = sitetype)) +
+  geom_bar(stat = "identity", aes(fill = sitetype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
+  geom_errorbar(aes(ymin=meanfreq-sefreq, ymax=meanfreq+sefreq), position = position_dodge(0.9, preserve = "single"), width=0.1, size=0.5, color="black") +
+  ylim(0, 1) +
+  labs(x= NULL, y = "Frequency") +
+  scale_fill_brewer(palette="Set2")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  facet_wrap(~planttype)
+stratavegtypesitetypecomparison
+
+# ggsave(stratavegtypesitetypecomparison, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/stratavegtypesitetypecomparison.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
+
+
+## STRATA MODELS
+# if you need summary stats adapt this
+stratasumbysitelongsumtemp <- filter(stratasumbysitelongsum, planttype == "Fern")
+describeBy(stratasumbysitelongsumtemp, stratasumbysitelongsumtemp$sitetype)
+
+
+# model it - tree frequency by height and site type
 stratasumbysite$treebeta <- (stratasumbysite$tree+.01)
 stratatreehitfrequencyglmm <- glmmTMB(treebeta ~ sitetype * height + (1|pair/site), data = stratasumbysite, family=beta_family(link="logit"))
 summary(stratatreehitfrequencyglmm)
@@ -920,93 +978,74 @@ emmip(strataherbhitfrequencyglmm, height ~ sitetype)
 
 
 
+
+
 #### Q3 LANDSCAPE CONTEXT - NATIVE WOODY VEGETATION COVERAGE - RECRUIT ABUNDANCE ---- 
 
 # consider only works sites
 beltdatasummarynativeworks <- filter(beltdatasummarynative, sitetype == "Works")
 
 # graph native and exotic species richness
-nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(x=nativevegcoveragepercentage, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkorange3") +
+nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(x=nativevegcoveragepercentage, y=norecruitsperha)) +
+  geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm", method.args = list(family = "poisson"),
-               colour = "darkblue") +
-  labs(x = 'Percentage of Native Woody Vegetation ', y = "Number of recruits") +
+               colour = "darkblue", se = TRUE) +
+  labs(x = 'Percentage of Native Woody Vegetation ', y = "Native woody recruits (stems/ha)") +
+  annotate("text", x = 60, y = 3000, label = "italic(R) ^ 2 == 0.07",
+           parse = TRUE) +
   theme_classic()
-
 nativewoodyvegcoveragerecruits
 
 #ggsave(nativewoodyvegcoveragerecruits, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativewoodyvegcoveragerecruits.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
-nativevegcovervrecruits <- glm(norecruits ~ nativevegcoveragepercentage, data = beltdatasummarynative,   family = poisson(link = "log"))
+nativevegcovervrecruits <- glm(norecruitsperha ~ nativevegcoveragepercentage, data = beltdatasummarynative,   family = poisson(link = "log"))
 summary(nativevegcovervrecruits)
-summ(nativevegcovervrecruits)
 r2(nativevegcovervrecruits)
-describe(beltdatasummary)
+with(summary(nativevegcovervrecruits), 1 - deviance/null.deviance)
+model_performance(nativevegcovervrecruits)
 
 
-#COMPARE TO EXOTIC COVER
+# #COMPARE TO EXOTIC COVER
+# 
+# groundcovervsnativecoverage <- full_join(quadratdatasummary, beltdatasummary, by='site')
+# groundcovervsnativecoverageworks <- filter(groundcovervsnativecoverage, sitetype.x == "Works")
+# describe(groundcovervsnativecoverageworks)
+# 
+# #graph it 
+# exoticcovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoverageworks, aes(x=nativevegcoveragepercentage, y=exotic)) +
+#   geom_jitter(size = 2, color = "darkorange3") +
+#   
+#   labs(x = 'Percentage of Native Woody Vegetation', y = "Exotic ground cover (%)") +
+#   theme_classic()
+# exoticcovervsnativecoveragegraph
 
-groundcovervsnativecoverage <- full_join(quadratdatasummary, beltdatasummary, by='site')
-
-groundcovervsnativecoverageworks <- filter(groundcovervsnativecoverage, sitetype.x == "Works")
-
-describe(groundcovervsnativecoverageworks)
-
-#graph it 
-exoticcovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoverageworks, aes(x=nativevegcoveragepercentage, y=exotic)) +
-  geom_jitter(size = 2, color = "darkorange3") +
-  
-  labs(x = 'Percentage of Native Woody Vegetation', y = "Exotic ground cover (%)") +
-  theme_classic()
-
-exoticcovervsnativecoveragegraph
-
-#ggsave(exoticcovervsnativecoveragegraph, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/exoticcovervsnativecoveragegraph.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-#model it - need to do beta
-groundcovervsnativecoverage$exoticbeta <- groundcovervsnativecoverage$exotic/100
-
-exoticgroundcovervsnativecoverageglm <- glm(exoticbeta ~ nativevegcoveragepercentage, data = groundcovervsnativecoverage,   family = beta_family(link="logit"))
-summary(exoticgroundcovervsnativecoverageglm)
-summ(exoticgroundcovervsnativecoverageglm)
+# #model it - need to do beta
+# groundcovervsnativecoverage$exoticbeta <- groundcovervsnativecoverage$exotic/100
+# 
+# exoticgroundcovervsnativecoverageglm <- glm(exoticbeta ~ nativevegcoveragepercentage, data = groundcovervsnativecoverage,   family = beta_family(link="logit"))
+# summary(exoticgroundcovervsnativecoverageglm)
+# summ(exoticgroundcovervsnativecoverageglm)
 
 
-#COMPARE TO NATIVE COVER
-#graph it 
-nativecovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoverageworks, aes(x=nativevegcoveragepercentage, y=native)) +
-  geom_jitter(size = 2, color = "darkorange3") +
-  
-  labs(x = 'Percentage of Native Woody Vegetation', y = "Native ground cover(%)") +
-  theme_classic()
-nativecovervsnativecoveragegraph
-
-#ggsave(nativecovervsnativecoveragegraph, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativecovervsnativecoveragegraph.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-#model it - need to do beta
-groundcovervsnativecoverage$nativebeta <- groundcovervsnativecoverage$native/100
-
-nativecovervsnativecoverageglm <- glm(nativebeta ~ nativevegcoveragepercentage, data = groundcovervsnativecoverage,   family = beta_family())
-summary(nativecovervsnativecoverageglm)
-summ(nativecovervsnativecoverageglm)
-
-
-#WHY? maybe because there is more fine woody debris? near native woody vegetation 
-
-finewdcovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoverageworks, aes(x=nativevegcoveragepercentage, y=finewd)) +
-  geom_jitter(size = 2, color = "darkgreen") +
-  geom_smooth (method = "lm", se = FALSE, colour = "darkorange2") +
-  labs(x = 'Percentage of Native Woody Vegetation', y = "Fine woody debis/leaf litter cover (%)") 
-
-finewdcovervsnativecoveragegraph
-
+# #COMPARE TO NATIVE COVER
+# #graph it 
+# nativecovervsnativecoveragegraph <- ggplot(data = groundcovervsnativecoverageworks, aes(x=nativevegcoveragepercentage, y=native)) +
+#   geom_jitter(size = 2, color = "darkorange3") +
+#   
+#   labs(x = 'Percentage of Native Woody Vegetation', y = "Native ground cover(%)") +
+#   theme_classic()
+# nativecovervsnativecoveragegraph
+# 
+# #ggsave(nativecovervsnativecoveragegraph, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativecovervsnativecoveragegraph.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# 
+# 
 # #model it - need to do beta
 # groundcovervsnativecoverage$nativebeta <- groundcovervsnativecoverage$native/100
 # 
 # nativecovervsnativecoverageglm <- glm(nativebeta ~ nativevegcoveragepercentage, data = groundcovervsnativecoverage,   family = beta_family())
 # summary(nativecovervsnativecoverageglm)
-# r2(nativecovervsnativecoverageglm)
+# summ(nativecovervsnativecoverageglm)
+
 
 
 #### Q3. BROWSER POO FREQUENCY ----
@@ -1086,7 +1125,6 @@ browsertotal <- ggplot(
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
   theme(axis.ticks.x = element_blank())
-
 browsertotal
 
 #ggsave(browsertotal, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/browsertotale.tiff", width = 16, height = 12, units = "cm", dpi = 600)
@@ -1096,328 +1134,174 @@ beltdatasummarynative$browsers <- poodatacount$total[match(beltdatasummarynative
 
 beltdatasummarynativeworks <- filter(beltdatasummarynative, sitetype == "Works")
 
-browservrecruit <- ggplot(data = beltdatasummarynativeworks, aes(x=browsers, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkorange2") +
+browservrecruit <- ggplot(data = beltdatasummarynativeworks, aes(x=browsers, y=norecruitsperha)) +
+  geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm",method.args = list(family = "poisson"),
                colour = "darkblue") +
-  labs(x = 'Browser pellet frequency ', y = "Number of native woody recruits") +
+  labs(x = 'Browser pellet frequency ', y = "Native woody recruits stems/ha)") +
+  annotate("text", x = 0.2, y = 3000, label = "italic(R) ^ 2 == 0.28",
+           parse = TRUE) +
   theme_classic()
-
 browservrecruit
 
 #ggsave(browservrecruit, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/browservrecruit.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
-browservrecruitmodel <- glm(norecruits ~ browsers, data = beltdatasummarynativeworks, family = poisson(link = "log"))
+browservrecruitmodel <- glm(norecruitsperha ~ browsers, data = beltdatasummarynativeworks, family = poisson(link = "log"))
 summary(browservrecruitmodel)
 r2(browservrecruitmodel)
+with(summary(browservrecruitmodel), 1 - deviance/null.deviance)
+model_performance(browservrecruitmodel)
 
 
 
 #### Q3. SOIL ANALYSIS bulk density ----
 
-beltdata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Belt transect counts")
-
-# bring in site type into beltdata dataframe
-beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
-
-
-#### include nutrients into dataset
-beltdata <- beltdata %>%
-  rename(site = 'Site Name',
-         species = 'Species Name',
-         origin = 'Native or Exotic',
-         counts = 'Counts',
-         recruits = 'Recruits/revegetation',
-         nativevegcoveragecounts = 'native veg coverage counts',
-         nativevegcoveragepercentage = 'native veg percentage coverage',
-         totalnitrogen = 'total nitrogen',
-         totalphosporus = 'total phosporus',
-         bulkdensityaverage = 'Bulk density average') 
-
-# identify factors
-beltdata$site <- as.factor(beltdata$site)
-beltdata$species <- as.factor(beltdata$species)
-beltdata$origin <- as.factor(beltdata$origin)
-beltdata$sitetype <- as.factor(beltdata$sitetype)
-
-# identify variables
-beltdata$counts <- as.numeric(beltdata$counts)
-beltdata$recruits <-as.numeric(beltdata$recruits)
-beltdata$nativevegcoveragecounts <- as.numeric(beltdata$nativevegcoveragecounts)
-beltdata$nativevegcoveragepercentage <- as.numeric(beltdata$nativevegcoveragepercentage)
-beltdata$nativevegcoveragecounts <- as.numeric(beltdata$nativevegcoveragecounts)
-beltdata$totalnitrogen <- as.numeric(beltdata$totalnitrogen)
-beltdata$totalphosporus <- as.numeric(beltdata$totalphosporus)                                               
-beltdata$bulkdensityaverage <- as.numeric(beltdata$bulkdensityaverage) 
-
-# summarise
-beltdatasummary <- beltdata %>%
-  group_by(sitetype, site, origin) %>%
-  summarise(
-    richness = n_distinct(species),
-    nostems = sum(counts),
-    norecruits = sum(recruits),
-    nativevegcoveragepercentage = mean(nativevegcoveragepercentage),
-    totalnitrogen = mean(totalnitrogen),
-    totalphosporus = mean(totalphosporus),
-    bulkdensityaverage = mean(bulkdensityaverage))
-
-beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
-
 beltdatasummarynative <- filter(beltdatasummarynative, sitetype == "Works")
-
 describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
 
 #Graph bulk density to recruits 
-bulkdensityvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=bulkdensityaverage, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkorange2") +
-  
-  labs(x = 'Bulk density (g/cm3)', y = "Number of recruits")+
+bulkdensityvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=bulkdensityaverage, y=norecruitsperha)) +
+  geom_jitter(size = 2, color = "#FC8D62") +
+  labs(x = 'Bulk density (g/cm3)', y = "Native woody recruits (stems/ha)")+
+  # annotate("text", x = 1, y = 3000, label = "italic(R) ^ 2 == 0.28",
+  #         parse = TRUE) +
   theme_classic()
-
 bulkdensityvsrecruits
 
 #ggsave(bulkdensityvsrecruits, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/bulkdensityvsrecruitss.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
-
 # model it 
-bulkdensityvsrecruitsglm <- glm(norecruits ~ bulkdensityaverage, data = beltdatasummarynative,   family = poisson(link = "log"))
+bulkdensityvsrecruitsglm <- glm(norecruitsperha ~ bulkdensityaverage, data = beltdatasummarynative,   family = poisson(link = "log"))
 summary(bulkdensityvsrecruitsglm)
 r2(bulkdensityvsrecruitsglm)
-
-#Graph bulk density to number of stems 
-bulkdensityvsnostems <- ggplot(data = beltdatasummarynative, aes(x=bulkdensityaverage, y=nostems)) +
-  geom_jitter(size = 2, color = "darkorange2") +
-  geom_smooth (method = "glm",method.args = list(family = "poisson"),colour="darkblue")+
-  labs(x = 'Bulk density (g/cm3)', y = "Number of trees and shrubs")+
-  theme_classic()
-
-bulkdensityvsnostems
-
-#ggsave(bulkdensityvsnostems, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/bulkdensityvsnostems.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-# model it 
-bulkdensityvsabundanceglm <- glm(nostems ~ bulkdensityaverage, data = beltdatasummarynative,   family = poisson(link = "log"))
-summary(bulkdensityvsabundanceglm)
-r2(bulkdensityvsabundanceglm)
+with(summary(bulkdensityvsrecruitsglm), 1 - deviance/null.deviance)
+model_performance(bulkdensityvsrecruitsglm)
 
 
 #### Q3. SOIL ANALYSIS nutrients ----
 
-beltdata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Belt transect counts")
-
-# bring in site type into beltdata dataframe
-beltdata$sitetype <- sitedata$'Site type'[match(beltdata$'Site Name', sitedata$'Site Name')]
-
-
-
-
-beltdata$sitetype <- sitedata$'Site type'
-#### include nutrients into dataset
-beltdata <- beltdata %>%
-  rename(site = 'Site Name',
-         species = 'Species Name',
-         origin = 'Native or Exotic',
-         counts = 'Counts',
-         recruits = 'Recruits/revegetation',
-         nativevegcoveragecounts = 'native veg coverage counts',
-         nativevegcoveragepercentage = 'native veg percentage coverage',
-         totalnitrogen = 'total nitrogen',
-         totalphosporus = 'total phosporus') 
-
-# identify factors
-beltdata$site <- as.factor(beltdata$site)
-beltdata$species <- as.factor(beltdata$species)
-beltdata$origin <- as.factor(beltdata$origin)
-beltdata$sitetype <- as.factor(beltdata$sitetype)
-
-# identify variables
-beltdata$counts <- as.numeric(beltdata$counts)
-beltdata$recruits <-as.numeric(beltdata$recruits)
-beltdata$nativevegcoveragecounts <- as.numeric(beltdata$nativevegcoveragecounts)
-beltdata$nativevegcoveragepercentage <- as.numeric(beltdata$nativevegcoveragepercentage)
-beltdata$nativevegcoveragecounts <- as.numeric(beltdata$nativevegcoveragecounts)
-beltdata$totalnitrogen <- as.numeric(beltdata$totalnitrogen)
-beltdata$totalphosporus <- as.numeric(beltdata$totalphosporus)                                               
-
-# summarise
-beltdatasummary <- beltdata %>%
-  group_by(sitetype, site, origin) %>%
-  summarise(
-    richness = n_distinct(species),
-    nostems = sum(counts),
-    norecruits = sum(recruits),
-    nativevegcoveragepercentage = mean(nativevegcoveragepercentage),
-    totalnitrogen = mean(totalnitrogen),
-    totalphosporus = mean(totalphosporus))
-
-beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
-
-beltdatasummarynativework <- filter(beltdatasummarynative, sitetype == "Works")                                
-
-#Nitrogen affect on recruits - Graph it
-nitrogenvsrecruits <- ggplot(data = beltdatasummarynativework, aes(x=totalnitrogen, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkorange2") +
+# Nitrogen affect on recruits - Graph it
+nitrogenvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=totalnitrogen, y=norecruitsperha)) +
+  geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm",method.args = list(family = "poisson"), colour = "darkblue") +
-  labs(x = 'Total nitrogen mg/kg ', y = "Number of native woody recruits") +
+  annotate("text", x = 6000, y = 3000, label = "italic(R) ^ 2 == 0.14",
+           parse = TRUE) +
+  labs(x = 'Total nitrogen mg/kg ', y = "Native woody recruits (stems/ha)") +
   theme_classic()
-
 nitrogenvsrecruits
 
 #ggsave(nitrogenvsrecruits, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nitrogenvsrecruits.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
 
-#model it
-nitrogenvsrecruitsglm <- glm(norecruits ~ totalnitrogen, data = beltdatasummarynativework,   family = poisson(link = "log"))
+# model it
+nitrogenvsrecruitsglm <- glm(norecruitsperha ~ totalnitrogen, data = beltdatasummarynative,   family = poisson(link = "log"))
 summary(nitrogenvsrecruitsglm)
 r2(nitrogenvsrecruitsglm)
-RsqGLM(nitrogenvsrecruitsglm)
+with(summary(nitrogenvsrecruitsglm), 1 - deviance/null.deviance)
+model_performance(nitrogenvsrecruitsglm)
 
-#Phosphorus affect on recruits - Graph it 
-phosphorusvsrecruits <- ggplot(data = beltdatasummarynativework, aes(x=totalphosporus, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkorange3") +
-  
-  labs(x = 'Total Phosphorus mg/kg ', y = "Number of native woody recruits") +
+
+# Phosphorus affect on recruits - Graph it 
+phosphorusvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=totalphosporus, y=norecruitsperha)) +
+  geom_jitter(size = 2, color = "#FC8D62") +
+  geom_smooth (method = "glm",method.args = list(family = "poisson"), colour = "darkblue") +
+  annotate("text", x = 1000, y = 3000, label = "italic(R) ^ 2 == 0.02",
+           parse = TRUE) +
+  labs(x = 'Total Phosphorus mg/kg ', y = "Native woody recruits (stems/ha)") +
   theme_classic()
-
 phosphorusvsrecruits
+
 
 #ggsave(phosphorusvsrecruits, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/phosphorusvsrecruits.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
-
 #model it
-phosphorusvsrecruitsglm <- glm(norecruits ~ totalphosporus, data = beltdatasummarynative,   family = poisson(link = "log"))
+phosphorusvsrecruitsglm <- glm(norecruitsperha ~ totalphosporus, data = beltdatasummarynative,   family = poisson(link = "log"))
 summary(phosphorusvsrecruitsglm)
 r2(phosphorusvsrecruitsglm)
-
-# NOW COMPARE SITE TYPE 
-nitrogenvsrecruits2 <- ggplot(data = beltdatasummarynative, aes(x=totalnitrogen, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkgreen") +
-  facet_wrap(.~sitetype)+
-  geom_smooth (method = "lm", se = FALSE, colour = "darkorange2") +
-  labs(x = 'Total nitrogen mg/kg ', y = "Number of recruits") +
-  theme_classic()
-
-nitrogenvsrecruits2
-
-#ggsave(nitrogenvsrecruits2, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nitrogenvsrecruits2.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+with(summary(phosphorusvsrecruitsglm), 1 - deviance/null.deviance)
+model_performance(phosphorusvsrecruitsglm)
 
 
-phosphorusvsrecruits2 <- ggplot(data = beltdatasummarynative, aes(x=totalphosporus, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkgreen") +
-  facet_wrap(.~sitetype)+
-  geom_smooth (method = "lm", se = FALSE, colour = "darkorange2") +
-  labs(x = 'Total phosphorus mg/kg ', y = "Number of recruits") +
-  theme_classic()
+# MEDLY PANELS OF DRIVERS OF RECRUITMENT
+linearpanels <- ggarrange(nativewoodyvegcoveragerecruits, browservrecruit, bulkdensityvsrecruits, nitrogenvsrecruits, phosphorusvsrecruits, align = "hv", ncol = 3, nrow = 2, labels = c("A", "B", "C", "D", "E", "F")) # different order
+linearpanels
 
-phosphorusvsrecruits2
-
-#ggsave(phosphorusvsrecruits2, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/phosphorusvsrecruits2.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# ggsave(linearpanels, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/linearpanels.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
 
 
-#not sure how to model that?
-
-phosphorusvsrecruits2 <- ggplot(data = beltdatasummarynative, aes(x=totalphosporus, y=norecruits)) +
-  geom_jitter(size = 2, color = "darkgreen") +
-  facet_wrap(.~sitetype)+
-  geom_smooth (method = "lm", se = FALSE, colour = "darkorange2") +
-  labs(x = 'Total phosphorus mg/kg ', y = "Number of recruits") +
-  theme_classic()
-
-phosphorusvsrecruits2
-
-
-
-
-
-
-#### Soil analysis - ground coverage data  ----
-
-
-soildata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Soil samples")
-
-
-soildata$sitetype <- sitedata$'Site type'[match(soildata$'Site Name', sitedata$'Site Name')]
-
-
-soildata <- soildata %>%
-  rename(site = 'Site Name',
-         bulkdensityraverage = 'Bulk density average',
-         totalnitrogen = 'total nitrogen mg/kg',
-         totalphosporus = 'total phosporus mg/kg') 
-
-# identify factors
-soildata$site <- as.factor(soildata$site)
-
-# identify variables
-soildata$bulkdensityraverage <- as.numeric(soildata$bulkdensityraverage)
-soildata$totalnitrogen <- as.numeric(soildata$totalnitrogen)
-soildata$totalphosporus <- as.numeric(soildata$totalphosporus)
-
-soildatasummary <- soildata %>%
-  group_by(sitetype, site) %>%
-  summarise(
-    bulkdensityraverage = mean(bulkdensityraverage),
-    totalnitrogen = mean(totalnitrogen),
-    totalphosporus = mean(totalphosporus))
-
-
-
-#merge quadratdata summary and soildata 
-
-covervssoil <- full_join(quadratdatasummary, soildata, by='site')
-
-#compare remant vs work sites
-boxplot(totalnitrogen ~ sitetype.x, data =covervssoil)
-
-boxplot(totalphosporus ~ sitetype.x, data =covervssoil)
-
-boxplot(bulkdensityraverage ~ sitetype.x, data =covervssoil)
-
-#restrict analysis to worksites 
-
-covervssoilworks <- filter(covervssoil, sitetype.x == "Works")
-
-
-#Nitrogen affect on recruits - Graph it
-nitrogenvsecoticcover <- ggplot(data = covervssoilworks, aes(x=totalnitrogen, y=exotic)) +
-  geom_jitter(size = 2, color = "darkorange2") +
-  
-  labs(x = 'Total nitrogen (mg/kg) ', y = "Exotic ground cover (%)") +
-  theme_classic()
-
-
-nitrogenvsecoticcover
-
-#ggsave(nitrogenvsecoticcover, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nitrogenvsecoticcovers.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-#model it - need to do beta
-covervssoilworks$exoticbeta <- covervssoilworks$exotic/100
-
-nitrogenvsecoticcoverglm <- glm(exoticbeta ~ totalnitrogen, data = covervssoilworks,   family = beta_family())
-summary(nitrogenvsecoticcoverglm)
-
-
-#Phosphorus affect on recruits 
-phosphorusvsexoticcover <- ggplot(data = covervssoilworks, aes(x=totalphosporus, y=exotic)) +
-  geom_jitter(size = 2, color = "darkorange2") +
-  
-  labs(x = 'Total phosphorus (mg/kg) ', y = "Exotic ground cover (%)") +
-  theme_classic()
-
-phosphorusvsexoticcover
-
-#ggsave(phosphorusvsexoticcover, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/phosphorusvsexoticcover.tiff", width = 16, height = 12, units = "cm", dpi = 600)
-
-
-
-#model it - need to do beta
-covervssoilworks$exoticbeta <- covervssoilworks$exotic/100
-
-phosphorusvsecoticcoverglm <- glm(exoticbeta ~ totalphosporus, data = covervssoilworks,   family = beta_family())
-summary(phosphorusvsecoticcoverglm)
-r2(phosphorusvsecoticcoverglm)
-
+# #### Soil analysis - ground coverage data  ----
+# soildata <- read_xlsx("Riparian works monitoring data_20220214a.xlsx", sheet = "Soil samples")
+# soildata$sitetype <- sitedata$'Site type'[match(soildata$'Site Name', sitedata$'Site Name')]
+# 
+# 
+# soildata <- soildata %>%
+#   rename(site = 'Site Name',
+#          bulkdensityraverage = 'Bulk density average',
+#          totalnitrogen = 'total nitrogen mg/kg',
+#          totalphosporus = 'total phosporus mg/kg') 
+# 
+# # identify factors
+# soildata$site <- as.factor(soildata$site)
+# 
+# # identify variables
+# soildata$bulkdensityraverage <- as.numeric(soildata$bulkdensityraverage)
+# soildata$totalnitrogen <- as.numeric(soildata$totalnitrogen)
+# soildata$totalphosporus <- as.numeric(soildata$totalphosporus)
+# 
+# soildatasummary <- soildata %>%
+#   group_by(sitetype, site) %>%
+#   summarise(
+#     bulkdensityraverage = mean(bulkdensityraverage),
+#     totalnitrogen = mean(totalnitrogen),
+#     totalphosporus = mean(totalphosporus))
+# 
+# 
+# 
+# #merge quadratdata summary and soildata 
+# covervssoil <- full_join(quadratdatasummary, soildata, by='site')
+# 
+# #compare remant vs work sites
+# boxplot(totalnitrogen ~ sitetype.x, data =covervssoil)
+# boxplot(totalphosporus ~ sitetype.x, data =covervssoil)
+# boxplot(bulkdensityraverage ~ sitetype.x, data =covervssoil)
+# 
+# #restrict analysis to worksites 
+# covervssoilworks <- filter(covervssoil, sitetype.x == "Works")
+# 
+# 
+# # Nitrogen affect on recruits - Graph it
+# nitrogenvsecoticcover <- ggplot(data = covervssoilworks, aes(x=totalnitrogen, y=exotic)) +
+#   geom_jitter(size = 2, color = "darkorange2") +
+#   labs(x = 'Total nitrogen (mg/kg) ', y = "Exotic ground cover (%)") +
+#   theme_classic()
+# nitrogenvsecoticcover
+# 
+# #ggsave(nitrogenvsecoticcover, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nitrogenvsecoticcovers.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# 
+# 
+# # model it - need to do beta
+# covervssoilworks$exoticbeta <- covervssoilworks$exotic/100
+# nitrogenvsecoticcoverglm <- glm(exoticbeta ~ totalnitrogen, data = covervssoilworks,   family = beta_family())
+# summary(nitrogenvsecoticcoverglm)
+# 
+# 
+# # Phosphorus affect on recruits 
+# phosphorusvsexoticcover <- ggplot(data = covervssoilworks, aes(x=totalphosporus, y=exotic)) +
+#   geom_jitter(size = 2, color = "darkorange2") +
+#   labs(x = 'Total phosphorus (mg/kg) ', y = "Exotic ground cover (%)") +
+#   theme_classic()
+# 
+# phosphorusvsexoticcover
+# 
+# #ggsave(phosphorusvsexoticcover, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/phosphorusvsexoticcover.tiff", width = 16, height = 12, units = "cm", dpi = 600)
+# 
+# 
+# 
+# #model it - need to do beta
+# covervssoilworks$exoticbeta <- covervssoilworks$exotic/100
+# phosphorusvsecoticcoverglm <- glm(exoticbeta ~ totalphosporus, data = covervssoilworks,   family = beta_family())
+# summary(phosphorusvsecoticcoverglm)
+# r2(phosphorusvsecoticcoverglm)
+# 
