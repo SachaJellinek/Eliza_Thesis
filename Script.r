@@ -998,8 +998,8 @@ nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(
   geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm", method.args = list(family = "poisson"),
                colour = "darkblue", se = TRUE) +
-  labs(x = 'Percentage of Native Woody Vegetation ', y = "Native woody recruits (stems/ha)") +
-  annotate("text", x = 60, y = 3000, label = "italic(R) ^ 2 == 0.07",
+  labs(x = 'Remnant vegetation %', y = "Native woody recruits (stems/ha)") +
+  annotate("text", x = 60, y = 3000, label = "italic(R) ^ 2 == 0.01",
            parse = TRUE) +
   theme_classic()
 nativewoodyvegcoveragerecruits
@@ -1196,7 +1196,7 @@ nitrogenvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=totalnitrogen, 
   geom_smooth (method = "glm",method.args = list(family = "poisson"), colour = "darkblue") +
   annotate("text", x = 6000, y = 3000, label = "italic(R) ^ 2 == 0.14",
            parse = TRUE) +
-  labs(x = 'Total nitrogen mg/kg ', y = "Native woody recruits (stems/ha)") +
+  labs(x = 'Total Nitrogen mg/kg ', y = "Native woody recruits (stems/ha)") +
   theme_classic()
 nitrogenvsrecruits
 
@@ -1233,7 +1233,7 @@ model_performance(phosphorusvsrecruitsglm)
 
 
 # MEDLY PANELS OF DRIVERS OF RECRUITMENT
-linearpanels <- ggarrange(nativewoodyvegcoveragerecruits, browservrecruit, bulkdensityvsrecruits, nitrogenvsrecruits, phosphorusvsrecruits, align = "hv", ncol = 3, nrow = 2, labels = c("A", "B", "C", "D", "E", "F")) # different order
+linearpanels <- ggarrange(nativewoodyvegcoveragerecruits, browservrecruit, bulkdensityvsrecruits, nitrogenvsrecruits, phosphorusvsrecruits, align = "hv", ncol = 3, nrow = 2, labels = c("A", "B", "C", "D", "E", "F"), hjust = -17) # different order
 linearpanels
 
 # ggsave(linearpanels, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/linearpanels.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
