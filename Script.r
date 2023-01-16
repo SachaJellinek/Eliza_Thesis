@@ -54,8 +54,11 @@ beltdata <- beltdata %>%
          origin = 'Native or Exotic',
          counts = 'Counts',
          recruits = 'Recruits/revegetation',
+         nitrogen = 'total nitrogen',
+         phosporus = 'total phosporus',
+         bulkdensity = 'Bulk density average', 
          nativevegcoveragecounts = 'native veg coverage counts',
-         nativevegcoveragepercentage = 'native veg percentage coverage') 
+         nativevegcoveragepercentage = 'Woody_perc') 
 
 
 # identify factors
@@ -69,6 +72,10 @@ beltdata$pair <- as.factor(beltdata$pair)
 # identify variables
 beltdata$counts <- as.numeric(beltdata$counts)
 beltdata$recruits <-as.numeric(beltdata$recruits)
+beltdata$nitrogen <-as.numeric(beltdata$nitrogen)
+beltdata$phosporus <-as.numeric(beltdata$phosporus)
+beltdata$bulkdensity <-as.numeric(beltdata$bulkdensity)
+
 
 
 # data exploration - belts
@@ -97,9 +104,9 @@ beltdatasummary <- beltdata %>%
     nostems = sum(counts),
     norecruits = sum(recruits),
     nativevegcoveragepercentage = mean(nativevegcoveragepercentage),
-    totalnitrogen = mean(totalnitrogen),
-    totalphosporus = mean(totalphosporus),
-    bulkdensityaverage = mean(bulkdensityaverage))
+    totalnitrogen = mean(nitrogen, na.rm = TRUE),
+    totalphosporus = mean(phosporus, na.rm = TRUE),
+    bulkdensityaverage = mean(bulkdensity, na.rm = TRUE))
 
 beltsummarycomplete <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
 
@@ -291,7 +298,7 @@ nativerecruitsBOX <- nativerecruitsBOX + theme(legend.position = "none")
 #### Q1/3a. EXOTIC TREE AND SHRUB Richness----
 
 # fill in missing cases for exotic taxa
-beltdatasummary <- beltdatasummary[complete.cases(beltdatasummary),]
+# beltdatasummary <- beltdatasummary[complete.cases(beltdatasummary),]
 beltdatasummary <-  complete(beltdatasummary, origin, fill = list(richness= 0, nostems = 0, norecruits = 0))
 
 # filter to only consider exotic
@@ -324,7 +331,7 @@ exotictreerichnessBOX <- ggplot(
   data = beltdatasummaryexotic, aes(x=sitetype, y=richness, fill = sitetype)) +
   geom_boxplot(outlier.shape = NA) +
   stat_boxplot(geom = "errorbar", width = 0.1) +
-  geom_jitter(width = 0.1, height = 0) +
+  geom_jitter(width = 0.1) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Exotic woody richness") +
   scale_fill_brewer(palette="Set2")+
@@ -691,6 +698,7 @@ describe(dffreqpres)
 
 
 
+
 ### ASSESS VEGETATION STRUCTURE - TREE HEIGHT AND SIZE ----
 
 # bring in site type
@@ -986,7 +994,7 @@ emmip(strataherbhitfrequencyglmm, height ~ sitetype)
 beltdatasummarynativeworks <- filter(beltdatasummarynative, sitetype == "Works")
 
 # graph native and exotic species richness
-nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(x=nativevegcoveragepercentage, y=norecruitsperha)) +
+nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(x=nativevegcoveragepercentage*100, y=norecruitsperha)) +
   geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm", method.args = list(family = "poisson"),
                colour = "darkblue", se = TRUE) +
