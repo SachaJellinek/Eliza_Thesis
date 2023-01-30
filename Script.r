@@ -695,8 +695,28 @@ canopybysitetypeglmm <- glmmTMB(prop ~ sitetype + (1|pair), data = dffreqpres, f
 summary(canopybysitetypeglmm)
 
 describe(dffreqpres)
+describeBy(dffreqpres, dffreqpres$sitetype)
 
 
+# Canopy presence BOXPLOT
+canopyBOX <- ggplot(
+  data = dffreqpres, aes(x=sitetype, y=prop, fill = sitetype)) +
+  geom_boxplot(outlier.shape = NA) +
+  stat_boxplot(geom = "errorbar", width = 0.1) +
+  geom_jitter(width = 0.1) +
+  ylim(0,1) +
+  labs(x = 'Site type', y = "Canopy presence %") +
+  scale_fill_brewer(palette="Set2")+
+  guides(colour=guide_legend(title="Site Type"))+
+  guides(fill=guide_legend(title="Site Type"))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.ticks.x = element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x=element_blank())
+canopyBOX
+# legend <- get_legend(canopyBOX)
+# canopyBOX <- canopyBOX + theme(legend.position = "none")
 
 
 ### ASSESS VEGETATION STRUCTURE - TREE HEIGHT AND SIZE ----
@@ -715,6 +735,11 @@ heightdata <- heightdata %>%
          species = `Species name`,
          height = 'Heights (first 5 of each Sp to 0.5m)')
 
+head(heightdata)
+species <- levels(as.factor(heightdata$species))
+species
+
+
 # identify factors
 heightdata$sitetype <- as.factor(heightdata$sitetype)
 heightdata$pair <- as.factor(heightdata$pair)
@@ -726,15 +751,7 @@ heightdata$species <- as.factor(heightdata$species)
 # identify variables
 heightdata$height <- as.numeric(heightdata$height)
 
-
-# summarise
-heightdatasummary <- heightdata %>%
-  group_by(sitetype, pair, site, species) %>%
-  summarise(
-    count = n(),
-    meanheight = mean(height))
-
-# filter out species for which only 1 plant was surveyed at a site?
+head(heightdata)
 
 
 # graph raw heights using boxplots?
@@ -759,7 +776,71 @@ heightfig2 <- ggplot(
   theme(axis.text.x = element_text(angle = 90))
 heightfig2
 
+
+# summarise heightdata
+heightdatasummary <- heightdata %>%
+  group_by(sitetype, pair, site, species) %>%
+  summarise(
+    count = n(),
+    meanheight = mean(height))
+
 describeBy(heightdatasummary, heightdatasummary$sitetype)
+# new <- heightdatasummary[which(heightdatasummary$count >= 3),]
+
+
+# filter out species for which <3 plants were surveyed at a site?
+heightdatasummarytrunc <- filter(heightdatasummary, count > 2)
+
+# at how many sites were those species found? 
+speciesbysite <- heightdatasummarytrunc %>%
+  group_by(sitetype, species) %>%
+  summarise(
+    count = n(),
+    height = mean(meanheight))
+
+
+# Matt's fancy code to select only species which occur at at least three site of a given sitetype
+new <- speciesbysite[which(speciesbysite$count > 2),]
+
+want <- unique(as.character(new$species))
+
+test <- NULL
+for(i in 1:NROW(want)) {
+  
+  get <- heightdata[which(as.character(heightdata$species) == want[i]),]
+  test <- rbind(test, get) }
+
+test <- filter(test, species != 'Eucalyptus ovata')
+
+
+# graph raw heights using boxplots using truncated data?
+heightfigtrunc <- ggplot(
+  data = test, aes(x=species, y= height, fill = sitetype)) +
+  geom_boxplot(position = position_dodge(preserve = 'single')) +
+  labs(x= NULL, y = "Height (m)") +
+  theme_classic() +
+  theme(axis.ticks.x = element_blank()) +
+  theme(axis.text.x = element_text(angle = 90))
+heightfigtrunc
+
+
+
+# graph raw heights using boxplots at sitetype level only?
+heightfigtrunc2 <- ggplot(
+  data = test, aes(x=sitetype, y= height, fill = sitetype)) +
+  geom_boxplot() +
+  labs(x= NULL, y = "Height (m)") +
+  theme_classic() +
+  theme(axis.ticks.x = element_blank()) +
+  theme(axis.text.x = element_text(angle = 90))
+heightfigtrunc2
+
+
+# Model of plant heights by species for truncated data
+heightslmm <- glmmTMB(height ~ sitetype*species + (1|site/pair), data = test, family=gaussian())
+summary(heightslmm)
+plot_model(heightslmm)
+
 
 
 
