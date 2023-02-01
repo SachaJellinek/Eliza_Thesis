@@ -88,6 +88,9 @@ describeBy(beltdata, beltdata$sitetype)
 # summary totals - propagules - taxa
 sort(unique(beltdata$species)) # SOME OF THESE ARE NOT WOODY SPECIES!!!
 beltdata <- filter(beltdata, species != "Poa labillardierei")
+beltdata <- filter(beltdata, species != "Senecio campylocarpus")
+beltdata <- filter(beltdata, species != "Atriplex semibaccata")
+
 # CHECK FOR OTHERS
 
 with(beltdata, tapply(species, list(sitetype), FUN = function(x) length(unique(x))))
@@ -221,7 +224,7 @@ r2(nativeabundancebysitetypemodel)
 nativeabundanceperhabysitetypemodel <- glmmTMB(stemsperha ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
 summary(nativeabundanceperhabysitetypemodel)
 r2(nativeabundanceperhabysitetypemodel)
-
+1/exp(-0.566653)
 
 # BOX PLOT OF NATIVE WOODY PLANT ABUNDANCE
 
@@ -272,7 +275,7 @@ recruitnativetreerichness
 recruitrichnessbysitetypemodel <- glmmTMB(norecruitsperha ~ sitetype + (1|pair), data = beltdatasummarynative, family = poisson(link = "log"))
 summary(recruitrichnessbysitetypemodel)
 r2(recruitrichnessbysitetypemodel)
-
+1/exp(-0.88515)
 
 # NATIVE RECRUITS BOXPLOT
 nativerecruitsBOX <- ggplot(
@@ -375,7 +378,7 @@ exotictreeabundance
 exoticabundancebysitetypemodel <- glmmTMB(stemsperha ~ sitetype + (1|pair), data = beltdatasummaryexotic, family = poisson(link = "log"))
 summary(exoticabundancebysitetypemodel)
 r2(exoticabundancebysitetypemodel)
-
+exp(0.7529)
 
 # EXOTIC Woody plant abundance BOXPLOT
 exotictreeabundanceBOX <- ggplot(
@@ -495,7 +498,7 @@ nativegroundcoverpercentage
 
 # model native ground cover using glmm
 quadratdata$nativebeta <- (quadratdata$native+1)/102
-nativegroundcoverbysitetypeglmm <- glmmTMB(nativebeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
+nativegroundcoverbysitetypeglmm <- glmmTMB(nativebeta ~ sitetype+(1|site/pair), data = quadratdata, family=beta_family(link="logit"))
 summary(nativegroundcoverbysitetypeglmm)
 r2(nativegroundcoverbysitetypeglmm)
 
@@ -519,7 +522,7 @@ exoticgroundcoverpercentage
 
 # model exotic ground cover using glmm
 quadratdata$exoticbeta <- (quadratdata$exotic+1)/102
-exoticgroundcoverbysitetypeglmm <- glmmTMB(exoticbeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
+exoticgroundcoverbysitetypeglmm <- glmmTMB(exoticbeta ~ sitetype+(1|site/pair), data = quadratdata, family=beta_family(link="logit"))
 summary(exoticgroundcoverbysitetypeglmm)
 r2(exoticgroundcoverbysitetypeglmm)
 
@@ -541,7 +544,7 @@ finewdgroundcoverpercentage
 
 # model finewd ground cover using glmm
 quadratdata$finewdbeta <- (quadratdata$finewd+1)/102
-finewdgroundcoverbysitetypeglmm <- glmmTMB(finewdbeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
+finewdgroundcoverbysitetypeglmm <- glmmTMB(finewdbeta ~ sitetype+(1|site/pair), data = quadratdata, family=beta_family(link="logit"))
 summary(finewdgroundcoverbysitetypeglmm)
 
 
@@ -563,7 +566,7 @@ coarsewdgroundcoverpercentage
 
 # model coarsewd ground cover using glmm 
 quadratdata$coarsewdbeta <- (quadratdata$coarsewd+1)/102
-coarsewdgroundcoverbysitetypeglmm <- glmmTMB(coarsewdbeta ~ sitetype + (1|pair/site), data = quadratdata, family=beta_family(link="logit"))
+coarsewdgroundcoverbysitetypeglmm <- glmmTMB(coarsewdbeta ~ sitetype + (1|site/pair), data = quadratdata, family=beta_family(link="logit"))
 summary(coarsewdgroundcoverbysitetypeglmm)
 
 
@@ -585,7 +588,7 @@ baregroundgroundcoverpercentage
 
 # model  bareground ground cover using glmm 
 quadratdata$baregroundbeta <- (quadratdata$ bareground+1)/102
-baregroundgroundcoverbysitetypeglmm <- glmmTMB(baregroundbeta ~ sitetype+(1|pair/site), data = quadratdata, family=beta_family(link="logit"))
+baregroundgroundcoverbysitetypeglmm <- glmmTMB(baregroundbeta ~ sitetype+(1|site/pair), data = quadratdata, family=beta_family(link="logit"))
 summary(baregroundgroundcoverbysitetypeglmm)
 
 
@@ -718,6 +721,12 @@ canopyBOX
 # legend <- get_legend(canopyBOX)
 # canopyBOX <- canopyBOX + theme(legend.position = "none")
 
+# combine with boxmedley to create Figure 3 for paper
+Fig3 <- ggarrange(nativetreerichnessBOX, nativetreeabundanceBOX,nativerecruitsBOX, exotictreerichnessBOX, exotictreeabundanceBOX, canopyBOX, common.legend = TRUE, legend = "bottom", align = "v", ncol = 3, nrow = 2, labels = c("A", "B", "C", "D", "E", "F")) # different order
+Fig3
+
+# ggsave(Fig3, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/Fig3.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
+
 
 ### ASSESS VEGETATION STRUCTURE - TREE HEIGHT AND SIZE ----
 
@@ -818,10 +827,14 @@ heightfigtrunc <- ggplot(
   data = test, aes(x=species, y= height, fill = sitetype)) +
   geom_boxplot(position = position_dodge(preserve = 'single')) +
   labs(x= NULL, y = "Height (m)") +
+  scale_fill_brewer(palette="Set2")+
   theme_classic() +
   theme(axis.ticks.x = element_blank()) +
   theme(axis.text.x = element_text(angle = 90))
 heightfigtrunc
+
+# ggsave(heightfigtrunc, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/Fig S1.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
+
 
 
 
@@ -1087,7 +1100,7 @@ nativewoodyvegcoveragerecruits
 
 #ggsave(nativewoodyvegcoveragerecruits, filename = "C:/Users/Eliza.Foley-Congdon/OneDrive - Water Technology Pty Ltd/Desktop/Eliza Uni/My thesis/nativewoodyvegcoveragerecruits.tiff", width = 16, height = 12, units = "cm", dpi = 600)
 
-nativevegcovervrecruits <- glm(norecruitsperha ~ nativevegcoveragepercentage, data = beltdatasummarynative,   family = poisson(link = "log"))
+nativevegcovervrecruits <- glm(norecruitsperha ~ nativevegcoveragepercentage, data = beltdatasummarynativeworks,   family = poisson(link = "log"))
 summary(nativevegcovervrecruits)
 r2(nativevegcovervrecruits)
 with(summary(nativevegcovervrecruits), 1 - deviance/null.deviance)
@@ -1285,7 +1298,7 @@ nitrogenvsrecruits
 
 
 # model it
-nitrogenvsrecruitsglm <- glm(norecruitsperha ~ totalnitrogen, data = beltdatasummarynative,   family = poisson(link = "log"))
+nitrogenvsrecruitsglm <- glm(norecruitsperha ~ totalnitrogen, data = beltdatasummarynativeworks,   family = poisson(link = "log"))
 summary(nitrogenvsrecruitsglm)
 r2(nitrogenvsrecruitsglm)
 with(summary(nitrogenvsrecruitsglm), 1 - deviance/null.deviance)
