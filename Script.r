@@ -1407,3 +1407,4 @@ linearpanels
 # summary(phosphorusvsecoticcoverglm)
 # r2(phosphorusvsecoticcoverglm)
 # 
+
