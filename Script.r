@@ -124,7 +124,7 @@ nativetreerichness <- ggplot(
   data = beltdatasummarynative, aes(x=reorder(site, -richness), y=richness, fill = sitetype)) +
   geom_bar(stat="identity", color= "black", position = position_dodge(preserve = "single")) +
   labs(x = 'Site', y = "Richness of native trees and shrubs") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -150,7 +150,7 @@ nativetreerichnessBOX <- ggplot(
   stat_boxplot(geom = "errorbar", width = 0.1) +
   geom_jitter(width = 0.1) +
   labs(x = 'Site', y = "Native woody richness") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   expand_limits(y = 0) +
@@ -234,7 +234,7 @@ nativetreeabundanceBOX <- ggplot(
   stat_boxplot(geom = "errorbar", width = 0.1) +
   geom_jitter(width = 0.1) +
   labs(x = 'Site', y = "Native woody plant density") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   expand_limits(y = 0) +
@@ -285,7 +285,7 @@ nativerecruitsBOX <- ggplot(
   geom_jitter(width = 0.1) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Native woody recruits (stems/ha)") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -337,7 +337,7 @@ exotictreerichnessBOX <- ggplot(
   geom_jitter(width = 0.1) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Exotic woody richness") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -388,7 +388,7 @@ exotictreeabundanceBOX <- ggplot(
   geom_jitter(width = 0.1) +
   expand_limits(y = 0) +
   labs(x = 'Site', y = "Exotic woody density") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -620,9 +620,9 @@ covertypecomparisonfigure <- ggplot(
   labs(x= NULL, y = "Understorey cover %") +
   scale_x_discrete(breaks=c("native","exotic","finewd", "coarsewd", "bareground"),
                    labels=c("Native plants","Exotic plants","Leaf litter", "Woody debris", "Bare ground")) +
-  scale_fill_brewer(palette="Set2")+
-  guides(colour=guide_legend(title="Site Type"))+
-  guides(fill=guide_legend(title="Site Type"))+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
+  guides(colour=guide_legend(title="Site type", labels = c("Remnant", "Revegetated")))+
+  guides(fill=guide_legend(title="Site type", labels = c("Remnant", "Revegetated")))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 0))+
   theme(axis.ticks.x = element_blank())
@@ -709,7 +709,7 @@ canopyBOX <- ggplot(
   geom_jitter(width = 0.1) +
   ylim(0,1) +
   labs(x = 'Site type', y = "Canopy presence %") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -827,7 +827,7 @@ heightfigtrunc <- ggplot(
   data = test, aes(x=species, y= height, fill = sitetype)) +
   geom_boxplot(position = position_dodge(preserve = 'single')) +
   labs(x= NULL, y = "Height (m)") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   theme_classic() +
   theme(axis.ticks.x = element_blank()) +
   theme(axis.text.x = element_text(angle = 90))
@@ -937,7 +937,7 @@ stratavegtypecomparison1 <- ggplot(
   geom_bar(stat = "identity", aes(fill = sitetype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
   ylim(0, 1) +
   labs(x= NULL, y = "Frequency") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
@@ -1028,7 +1028,7 @@ stratavegtypesitetypecomparison <- ggplot(
   geom_errorbar(aes(ymin=meanfreq-sefreq, ymax=meanfreq+sefreq), position = position_dodge(0.9, preserve = "single"), width=0.1, size=0.5, color="black") +
   ylim(0, 1) +
   labs(x= NULL, y = "Frequency") +
-  scale_fill_brewer(palette="Set2")+
+  scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
   guides(colour=guide_legend(title="Site Type"))+
   guides(fill=guide_legend(title="Site Type"))+
   theme_classic()+
