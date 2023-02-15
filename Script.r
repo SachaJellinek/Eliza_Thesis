@@ -1034,7 +1034,8 @@ stratavegtypesitetypecomparison <- ggplot(
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
   facet_wrap(~planttype)
-stratavegtypesitetypecomparison
+stratavegtypesitetypecomparison 
+stratavegtypesitetypecomparison <- stratavegtypesitetypecomparison +coord_flip()
 
 # ggsave(stratavegtypesitetypecomparison, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/stratavegtypesitetypecomparison.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
 
