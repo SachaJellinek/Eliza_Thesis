@@ -1027,15 +1027,17 @@ stratavegtypesitetypecomparison <- ggplot(
   geom_bar(stat = "identity", aes(fill = sitetype), colour = "black", position = position_dodge2(width = 0.9, preserve = "single")) +
   geom_errorbar(aes(ymin=meanfreq-sefreq, ymax=meanfreq+sefreq), position = position_dodge(0.9, preserve = "single"), width=0.1, size=0.5, color="black") +
   ylim(0, 1) +
-  labs(x= NULL, y = "Frequency") +
+  labs(x= "Vegetation height (m)", y = "Frequency of hits") +
   scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
-  guides(colour=guide_legend(title="Site Type"))+
-  guides(fill=guide_legend(title="Site Type"))+
+  guides(colour=guide_legend(title="Site type"))+
+  guides(fill=guide_legend(title="Site type"))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  facet_wrap(~planttype)
+  facet_wrap(~planttype) +
+  theme(strip.text.x = element_text(size = 14))
 stratavegtypesitetypecomparison 
 stratavegtypesitetypecomparison <- stratavegtypesitetypecomparison +coord_flip()
+stratavegtypesitetypecomparison
 
 # ggsave(stratavegtypesitetypecomparison, filename = "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/stratavegtypesitetypecomparison.tiff", width = 210, height = 140, units = c("mm"), bg = "white", dpi = 300)
 
