@@ -99,6 +99,27 @@ with(beltdata, tapply(species, list(sitetype, origin), FUN = function(x) length(
 with(beltdata, tapply(species, list(origin), FUN = function(x) length(unique(x))))
 
 
+# create summary of species per sitetype by no of sites for paper
+speciessummarybysite <- beltdata %>%
+  group_by(species, origin, sitetype, site) %>%
+  summarise(
+    noofstems = sum(counts))
+
+speciessummary <- speciessummarybysite %>%
+  group_by(species, origin) %>%
+  summarise(
+    noofremsites = sum(sitetype == "Remnant"),
+    noofworkssites = sum(sitetype == "Works"),
+    meannoofstemsrem = mean(noofstems[sitetype == "Remnant"], na.rm = TRUE),
+    meannoofstemsworks = mean(noofstems[sitetype == "Works"], na.rm = TRUE))
+
+speciessummary <- speciessummary %>%
+  mutate(sitedifremminusworks = noofremsites - noofworkssites)
+
+speciessummary[is.na(speciessummary)] <- 0
+# write.csv(speciessummary, "~/uomShare/wergProj/Eliza_Thesis_Nov22/figures/specieslistforTableS1.csv", row.names=FALSE)
+
+
 # summarise
 beltdatasummary <- beltdata %>%
   group_by(sitetype, pair, site, origin) %>%
@@ -826,8 +847,9 @@ test <- filter(test, species != 'Eucalyptus ovata')
 heightfigtrunc <- ggplot(
   data = test, aes(x=species, y= height, fill = sitetype)) +
   geom_boxplot(position = position_dodge(preserve = 'single')) +
-  labs(x= NULL, y = "Height (m)") +
+  labs(x= "Species", y = "Plant height (m)") +
   scale_fill_brewer(palette="Set2", labels = c("Remnant", "Revegetated"))+
+  guides(fill=guide_legend(title="Site type"))+
   theme_classic() +
   theme(axis.ticks.x = element_blank()) +
   theme(axis.text.x = element_text(angle = 90))
