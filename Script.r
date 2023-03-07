@@ -1239,7 +1239,7 @@ poodatacount <- poodata %>%
 
 # sum across all browser types
 poodatacount$total <- poodatacount$kanga + poodatacount$wall + poodatacount$rabbit + poodatacount$deer 
-
+describe(poodatacount)
 
 # graph browser frequency 
 browsertotal <- ggplot(
