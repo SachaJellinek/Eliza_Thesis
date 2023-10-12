@@ -1,11 +1,11 @@
-### THIS FILE SUMMARISES DATA COLLECTED FOR ELIZA CONGDON-FOLEY's MATSTERS STUDY ON REVEGETATION OUTCOMES
+### THIS FILE SUMMARISES DATA COLLECTED FOR ELIZA CONGDON-FOLEY's MATSTERS STUDY ON REVEGETATION OUTCOMES 
 
 # Project: ELIZA CONGDON-FOLEY's MATSTERS STUDY ON REVEGETATION OUTCOMES  #
 # Required data files:  XXXXXX
 # 
 # Purpose: statistical analysis of revegetation outcomes                  #
 # Author: ELIZA CONGDON-FOLEY                                             #
-# Date: XXXXXX                                              #
+# Date: 20231012                                              #
 
 
 # load required packages ----
