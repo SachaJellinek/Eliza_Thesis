@@ -23,8 +23,8 @@ library(performance)
 library(ggpubr)
 
 # Set working directory - WERG drive
-setwd("~/uomShare/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
-setwd("~/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
+# setwd("~/uomShare/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
+# setwd("~/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
 
 
 
@@ -140,7 +140,7 @@ beltsummarycomplete <-  complete(beltdatasummary, origin, fill = list(richness= 
 
    
 # filter to consider only native
-beltdatasummarynative <- filter(beltdatasummary, origin == "Native")
+beltdatasummarynative <- filter(beltsummarycomplete, origin == "Native")
 describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
 
 # graph native species richness
@@ -1122,7 +1122,7 @@ nativewoodyvegcoveragerecruits <- ggplot(data = beltdatasummarynativeworks, aes(
   geom_smooth (method = "glm", method.args = list(family = "poisson"),
                colour = "darkblue", se = TRUE) +
   labs(x = 'Remnant vegetation %', y = "Native woody recruits (stems/ha)") +
-  annotate("text", x = 60, y = 3000, label = "italic(R) ^ 2 == 0.01",
+  annotate("text", x = 60, y = 3000, label = "italic(R) ^ 2 == 0.02",
            parse = TRUE) +
   theme_classic()
 nativewoodyvegcoveragerecruits
@@ -1288,9 +1288,11 @@ describeBy(beltdatasummarynative, beltdatasummarynative$sitetype)
 #Graph bulk density to recruits 
 bulkdensityvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=bulkdensityaverage, y=norecruitsperha)) +
   geom_jitter(size = 2, color = "#FC8D62") +
+  geom_smooth (method = "glm", method.args = list(family = "poisson"),
+               colour = "darkblue", se = TRUE) +
   labs(x = 'Bulk density (g/cm3)', y = "Native woody recruits (stems/ha)")+
-  # annotate("text", x = 1, y = 3000, label = "italic(R) ^ 2 == 0.28",
-  #         parse = TRUE) +
+  annotate("text", x = 1, y = 3000, label = "italic(R) ^ 2 == 0.002",
+           parse = TRUE) +
   theme_classic()
 bulkdensityvsrecruits
 
@@ -1311,7 +1313,7 @@ model_performance(bulkdensityvsrecruitsglm)
 nitrogenvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=totalnitrogen, y=norecruitsperha)) +
   geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm",method.args = list(family = "poisson"), colour = "darkblue") +
-  annotate("text", x = 6000, y = 3000, label = "italic(R) ^ 2 == 0.14",
+  annotate("text", x = 6000, y = 3000, label = "italic(R) ^ 2 == 0.10",
            parse = TRUE) +
   labs(x = 'Total Nitrogen mg/kg ', y = "Native woody recruits (stems/ha)") +
   theme_classic()
@@ -1332,7 +1334,7 @@ model_performance(nitrogenvsrecruitsglm)
 phosphorusvsrecruits <- ggplot(data = beltdatasummarynative, aes(x=totalphosporus, y=norecruitsperha)) +
   geom_jitter(size = 2, color = "#FC8D62") +
   geom_smooth (method = "glm",method.args = list(family = "poisson"), colour = "darkblue") +
-  annotate("text", x = 1000, y = 3000, label = "italic(R) ^ 2 == 0.02",
+  annotate("text", x = 1000, y = 3000, label = "italic(R) ^ 2 == 0.04",
            parse = TRUE) +
   labs(x = 'Total Phosphorus mg/kg ', y = "Native woody recruits (stems/ha)") +
   theme_classic()
