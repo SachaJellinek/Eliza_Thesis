@@ -22,10 +22,10 @@ library(emmeans)
 library(performance)
 library(ggpubr)
 
+
 # Set working directory - WERG drive
 # setwd("~/uomShare/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
 # setwd("~/wergProj/Eliza_Thesis_Nov22") # change to match path on your computer
-
 
 
 # load data
@@ -78,7 +78,6 @@ beltdata$recruits <-as.numeric(beltdata$recruits)
 beltdata$nitrogen <-as.numeric(beltdata$nitrogen)
 beltdata$phosporus <-as.numeric(beltdata$phosporus)
 beltdata$bulkdensity <-as.numeric(beltdata$bulkdensity)
-
 
 
 # data exploration - belts
