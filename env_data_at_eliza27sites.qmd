@@ -1,0 +1,63 @@
+---
+title: "Compiling site-specific environmental attributes from mwstr"
+format: html
+editor: visual
+---
+
+## What this script does
+
+After feeding the survey sites of interest to the 'Snap sites to Melbourne Water Stream Network' tool: https://tools.thewerg.unimelb.edu.au/mwstr/shiny_snapper.html one received two outputs:
+
+1.  An excel workbook with 4 sheets: snapped_points (sheet 1), site_env_data (sheet 2), metadata (sheet 3) and input_data (sheet 4)
+
+2.  a gpkg (GeoPackage) file containing the points that have been snapped (moved) to the nearest stream reach
+
+This script assembles the environmental attributes of interest for each of the 27 (works and remnant) survey sites in Eliza's study.
+
+```{r}
+# read in the input and snapped points data 
+input <- readxl::read_xlsx('~/uomShare/wergProj/Eliza_Thesis_Nov22/Mapping/snapped_points_2023-10-17.xlsx',sheet=4)
+snapped <- readxl::read_xlsx('~/uomShare/wergProj/Eliza_Thesis_Nov22/Mapping/snapped_points_2023-10-17.xlsx',sheet=1)
+
+# the rows in the input_data and snapped_points sheets are in the same order BUT the site.code field is NOT present in the the snapped_points sheet
+# BE AWARE that the rows in site_env_data are NOT in the same order as input_data and snapped_points
+
+# select (and rename as required) just the variables of interest from input_data and snapped_points
+input_sel <- dplyr::select(input, site.code, type, paircode="pairs", easting_epsg28355 ="x", northing_epsg28355 ="y")
+snapped_sel <- dplyr::select(snapped, sitecode_v12, reach_v12, str_nm)
+# as the rows are in the same order AND we need the sitecode info together with the reach & other data we cbind them
+sites <- cbind(input_sel, snapped_sel)
+# for the site summary table, we want to order the sites by paircode AND then by type
+sites <- sites[with(sites, order(paircode,type)), ]
+
+# read in the site_env data & select the variables of interest
+site_env <- readxl::read_xlsx('~/uomShare/wergProj/Eliza_Thesis_Nov22/Mapping/snapped_points_2023-10-17.xlsx',sheet=2)
+env_sel <- dplyr::select(site_env, reach, carea_km2, elev_asl_m, meanq_mm)
+
+# put it together
+sites <- dplyr::left_join(sites, env_sel, by=c("reach_v12" = "reach"))
+
+# strahler info is in the subc_env table of the mwstr database
+# Use the RPostgres function to connect to the MW databases
+db_mwstr <- RPostgres::dbConnect(RPostgres::Postgres(), "mwstr", host = "localhost", port = 5432, user = "readonly", password = "reachcode_42")
+# If you want to read spatial data:
+# streams <- sf::st_read(db_mwstr, query = "SELECT * FROM streams WHERE sampleable = 1;")
+# coast <- sf::st_read(db_mwstr, query = "SELECT * FROM coast;")
+
+# if you want to have a look at the tables in the mwstr database 
+#DBI::dbListTables(db_mwstr) # there're 28 tables
+# if you want to have a look at the contents in the tables e.g. subc_env and subcs tables
+#DBI::dbListFields(db_mwstr, 'subc_env') ; DBI::dbListFields(db_mwstr, 'subcs')
+
+# grab the strahler info for each reach
+strah <- DBI::dbGetQuery(db_mwstr, "SELECT reach, strahler FROM subc_env")
+
+# add the strahler info to the survey sites
+sites <- dplyr::left_join(sites, strah, by=c("reach_v12" = "reach"))
+
+# write the survey sites summary data out to an excel file
+writexl::write_xlsx(sites, "~/uomShare/wergProj/Eliza_Thesis_Nov22/Mapping/eliza_27sites_envdata.xlsx")
+
+# disconnect database when finished:
+DBI::dbDisconnect(db_mwstr)
+```
